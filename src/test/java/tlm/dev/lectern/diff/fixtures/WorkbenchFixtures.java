@@ -14,6 +14,7 @@ import tlm.dev.lectern.diff.read.VersionTree;
 public final class WorkbenchFixtures {
 
     private static final Path GENERATED = Path.of("..", "LecternWorkbench", "generated");
+    private static final Path NORMALIZED = Path.of("..", "LecternWorkbench", "normalized");
     private static final Map<String, VersionKind> KINDS = Map.of(
             "1.14.4", new VersionKind.Release(),
             "1.20.4", new VersionKind.Release(),
@@ -33,6 +34,31 @@ public final class WorkbenchFixtures {
                     + " official data generator with --server --reports into LecternWorkbench/generated/" + version
                     + "/ as described in LecternPipeline/CLAUDE.md, section Constats.");
         }
+    }
+
+    public static Path generatedFolder(String version) {
+        return GENERATED.resolve(version);
+    }
+
+    public static Path normalizedFolder(String version) {
+        return NORMALIZED.resolve(version);
+    }
+
+    public static void requireNormalized(String... versions) {
+        for (String version : versions) {
+            Path reports = NORMALIZED.resolve(version).resolve("reports");
+            assumeTrue(Files.isDirectory(reports), "Workbench data missing: " + reports.normalize()
+                    + ". Run LecternPipeline on " + version + " to write LecternWorkbench/normalized/" + version
+                    + "/ as described in LecternPipeline/CLAUDE.md.");
+        }
+    }
+
+    public static String kindLabel(String version) {
+        VersionKind kind = KINDS.get(version);
+        if (kind == null) {
+            throw new IllegalArgumentException("No kind known for the Workbench version " + version);
+        }
+        return kind.label();
     }
 
     public static VersionTree tree(String version) {

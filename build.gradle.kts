@@ -40,6 +40,9 @@ tasks.test {
     inputs.files(fileTree("../LecternWorkbench/generated") { include("*/reports/registries.json", "*/reports/blocks.json", "*/reports/packets.json", "*/reports/commands.json") })
         .withPropertyName("workbenchReports")
         .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(fileTree("../LecternWorkbench/normalized") { include("*/reports/registries.json", "*/reports/blocks.json", "*/reports/packets.json", "*/reports/commands.json") })
+        .withPropertyName("workbenchNormalizedReports")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
     testLogging {
         events("failed", "skipped")
         exceptionFormat = TestExceptionFormat.FULL
