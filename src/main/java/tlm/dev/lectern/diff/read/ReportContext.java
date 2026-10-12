@@ -55,6 +55,13 @@ final class ReportContext {
         throw failure(what + " is not a string");
     }
 
+    boolean bool(JsonValue value, String what) {
+        if (value instanceof JsonBoolean flag) {
+            return flag.value();
+        }
+        throw failure(what + " is not a boolean");
+    }
+
     void requireTrue(JsonValue value, String what) {
         if (!(value instanceof JsonBoolean flag) || !flag.value()) {
             throw failure(what + " is not true");
