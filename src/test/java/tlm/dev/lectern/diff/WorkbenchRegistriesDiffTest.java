@@ -51,7 +51,7 @@ class WorkbenchRegistriesDiffTest {
         requireReport(RegistryReportReader.FILE, from, to);
         VersionTree before = tree(from);
         VersionTree after = tree(to);
-        List<Change> changes = List.copyOf(differ.diff(reader.read(before), reader.read(after)));
+        List<Change> changes = List.copyOf(differ.diff(reader.read(before).orElseThrow(), reader.read(after).orElseThrow()));
         return new ChangeSet(before.version(), after.version(), changes);
     }
 
@@ -76,7 +76,7 @@ class WorkbenchRegistriesDiffTest {
                 "1.14.4", 37, "1.20.4", 70, "1.21.11", 95, RELEASE, 95, SNAPSHOT, 95);
         expectedRegistryCounts.keySet().forEach(version -> requireReport(RegistryReportReader.FILE, version));
         expectedRegistryCounts.forEach((version, count) -> {
-            Registries registries = reader.read(tree(version));
+            Registries registries = reader.read(tree(version)).orElseThrow();
             assertEquals(count, registries.byKey().size(), version);
         });
     }

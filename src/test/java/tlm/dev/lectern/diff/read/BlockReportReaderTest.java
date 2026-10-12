@@ -12,6 +12,7 @@ import static tlm.dev.lectern.diff.fixtures.VersionFixtures.release;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tlm.dev.lectern.diff.fixtures.InMemoryVersionTree;
 import tlm.dev.lectern.diff.json.JsonReader;
@@ -22,12 +23,16 @@ class BlockReportReaderTest {
 
     private final BlockReportReader reader = new BlockReportReader(new JsonReader());
 
+    private Blocks read(VersionTree tree) {
+        return reader.read(tree).orElseThrow();
+    }
+
     private static VersionTree tree(String blocksJson) {
         return new InMemoryVersionTree(release("9.1"), Map.of("reports/blocks.json", blocksJson));
     }
 
     private String failureOf(String blocksJson) {
-        return assertThrows(VersionReadException.class, () -> reader.read(tree(blocksJson))).getMessage();
+        return assertThrows(VersionReadException.class, () -> read(tree(blocksJson))).getMessage();
     }
 
     private static void assertFailure(String message, String fragment) {
@@ -37,7 +42,7 @@ class BlockReportReaderTest {
 
     @Test
     void readsBlocksWithAndWithoutProperties() {
-        Blocks blocks = reader.read(tree("""
+        Blocks blocks = read(tree("""
                 {
                   "demo:crate": {"states": [{"default": true, "id": 0}]},
                   "demo:lever": {
@@ -64,7 +69,7 @@ class BlockReportReaderTest {
 
     @Test
     void theOrderOfTheKeysDoesNotMatterInBlocksOrInStates() {
-        Blocks first = reader.read(tree("""
+        Blocks first = read(tree("""
                 {"demo:lamp": {
                   "properties": {"lit": ["true", "false"]},
                   "states": [
@@ -72,7 +77,7 @@ class BlockReportReaderTest {
                     {"default": true, "properties": {"lit": "false"}, "id": 2}
                   ]}}
                 """));
-        Blocks second = reader.read(tree("""
+        Blocks second = read(tree("""
                 {"demo:lamp": {
                   "states": [
                     {"id": 2, "properties": {"lit": "false"}, "default": true},
@@ -85,14 +90,14 @@ class BlockReportReaderTest {
 
     @Test
     void theDefinitionOfABlockIsIgnoredWhateverItHolds() {
-        Blocks withDefinition = reader.read(tree("""
+        Blocks withDefinition = read(tree("""
                 {
                   "demo:a": {"definition": {"type": "demo:plain", "settings": [1, 2, {"x": null}]}, "states": [{"default": true, "id": 0}]},
                   "demo:b": {"definition": "free text", "states": [{"default": true, "id": 1}]},
                   "demo:c": {"definition": 3, "states": [{"default": true, "id": 2}]}
                 }
                 """));
-        Blocks without = reader.read(tree("""
+        Blocks without = read(tree("""
                 {
                   "demo:a": {"states": [{"default": true, "id": 0}]},
                   "demo:b": {"states": [{"default": true, "id": 1}]},
@@ -104,7 +109,7 @@ class BlockReportReaderTest {
 
     @Test
     void blocksMayBeUnsortedAndStateIdsMayHaveHoles() {
-        Blocks blocks = reader.read(tree("""
+        Blocks blocks = read(tree("""
                 {
                   "demo:zeta": {"states": [{"default": true, "id": 40}]},
                   "demo:alpha": {"states": [{"default": true, "id": 7}]}
@@ -114,10 +119,9 @@ class BlockReportReaderTest {
     }
 
     @Test
-    void aMissingReportNamesTheVersionAndTheFile() {
+    void aMissingReportGivesNoBlocksInsteadOfAnError() {
         VersionTree empty = new InMemoryVersionTree(release("9.1"), Map.of());
-        VersionReadException failure = assertThrows(VersionReadException.class, () -> reader.read(empty));
-        assertEquals("Version 9.1, reports/blocks.json: the report is missing", failure.getMessage());
+        assertEquals(Optional.empty(), reader.read(empty));
     }
 
     @Test

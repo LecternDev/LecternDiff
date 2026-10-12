@@ -10,8 +10,8 @@ final class ChangeOrder {
             .thenComparingInt(change -> keyOf(change).rank())
             .thenComparing(change -> keyOf(change).detail());
 
-    private static final int REGISTRIES = 0;
-    private static final int BLOCKS = 1;
+    private static final int REGISTRIES = ChangeDomain.REGISTRIES.rank();
+    private static final int BLOCKS = ChangeDomain.BLOCKS.rank();
 
     private record Key(int group, String subject, int rank, String detail) {
     }

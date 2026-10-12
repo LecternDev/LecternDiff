@@ -44,7 +44,7 @@ class WorkbenchBlocksDiffTest {
         requireReport(BlockReportReader.FILE, from, to);
         VersionTree before = tree(from);
         VersionTree after = tree(to);
-        List<Change> changes = List.copyOf(differ.diff(reader.read(before), reader.read(after)));
+        List<Change> changes = List.copyOf(differ.diff(reader.read(before).orElseThrow(), reader.read(after).orElseThrow()));
         return new ChangeSet(before.version(), after.version(), changes);
     }
 
@@ -86,7 +86,7 @@ class WorkbenchBlocksDiffTest {
                 SNAPSHOT, new int[] {1288, 35775});
         expected.keySet().forEach(version -> requireReport(BlockReportReader.FILE, version));
         expected.forEach((version, counts) -> {
-            Blocks blocks = reader.read(tree(version));
+            Blocks blocks = reader.read(tree(version)).orElseThrow();
             assertEquals(counts[0], blocks.byKey().size(), version + " blocks");
             assertEquals(counts[1], blocks.stateCount(), version + " states");
         });

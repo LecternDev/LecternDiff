@@ -14,8 +14,12 @@ import org.junit.jupiter.api.Test;
 import tlm.dev.lectern.diff.json.CanonicalJsonWriter;
 import tlm.dev.lectern.diff.json.JsonReader;
 import tlm.dev.lectern.diff.model.Change;
+import tlm.dev.lectern.diff.model.ChangeDomain;
 import tlm.dev.lectern.diff.model.ChangeSet;
 import tlm.dev.lectern.diff.model.RegistryDefaultModified;
+import tlm.dev.lectern.diff.model.SkipReason;
+import tlm.dev.lectern.diff.model.SkipSide;
+import tlm.dev.lectern.diff.model.SkippedDomain;
 import tlm.dev.lectern.diff.model.VersionId;
 import tlm.dev.lectern.diff.model.VersionKind;
 import tlm.dev.lectern.diff.model.VersionRef;
@@ -154,6 +158,7 @@ class ChangeSetWriterTest {
                 "kind": "release"
               },
               "schema_version": 1,
+              "skipped": [],
               "to": {
                 "id": "1.1-pre-1",
                 "kind": "pre-release"
@@ -204,12 +209,47 @@ class ChangeSetWriterTest {
                     "kind": "release"
                   },
                   "schema_version": 1,
+                  "skipped": [],
                   "to": {
                     "id": "1.1",
                     "kind": "release"
                   }
                 }
                 """, written);
+    }
+
+    @Test
+    void skippedDomainsAreWrittenInTheOrderOfTheSchemaWithTheirSideAndReason() {
+        ChangeSet changeSet = new ChangeSet(release("1.0"), release("1.1"),
+                List.of(new SkippedDomain(ChangeDomain.BLOCKS, SkipSide.FROM, new SkipReason.ReportMissing()),
+                        new SkippedDomain(ChangeDomain.REGISTRIES, SkipSide.BOTH, new SkipReason.ReportMissing())),
+                List.of());
+        assertEquals("""
+                {
+                  "changes": [],
+                  "from": {
+                    "id": "1.0",
+                    "kind": "release"
+                  },
+                  "schema_version": 1,
+                  "skipped": [
+                    {
+                      "domain": "registries",
+                      "reason": "report_missing",
+                      "side": "both"
+                    },
+                    {
+                      "domain": "blocks",
+                      "reason": "report_missing",
+                      "side": "from"
+                    }
+                  ],
+                  "to": {
+                    "id": "1.1",
+                    "kind": "release"
+                  }
+                }
+                """, writer.write(changeSet));
     }
 
     @Test

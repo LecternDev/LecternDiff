@@ -21,12 +21,16 @@ class RegistryReportReaderTest {
 
     private final RegistryReportReader reader = new RegistryReportReader(new JsonReader());
 
+    private Registries read(VersionTree tree) {
+        return reader.read(tree).orElseThrow();
+    }
+
     private static VersionTree tree(String registriesJson) {
         return new InMemoryVersionTree(release("9.1"), Map.of("reports/registries.json", registriesJson));
     }
 
     private String failureOf(String registriesJson) {
-        return assertThrows(VersionReadException.class, () -> reader.read(tree(registriesJson))).getMessage();
+        return assertThrows(VersionReadException.class, () -> read(tree(registriesJson))).getMessage();
     }
 
     private static void assertFailure(String message, String fragment) {
@@ -36,7 +40,7 @@ class RegistryReportReaderTest {
 
     @Test
     void readsRegistriesWithEntriesAndAnOptionalDefault() {
-        Registries registries = reader.read(tree("""
+        Registries registries = read(tree("""
                 {
                   "demo:gadget": {
                     "default": "demo:basic",
@@ -63,10 +67,10 @@ class RegistryReportReaderTest {
 
     @Test
     void theRegistryProtocolIdMayComeBeforeOrAfterTheEntries() {
-        Registries before = reader.read(tree("""
+        Registries before = read(tree("""
                 {"demo:gadget": {"protocol_id": 4, "entries": {"demo:basic": {"protocol_id": 0}}}}
                 """));
-        Registries after = reader.read(tree("""
+        Registries after = read(tree("""
                 {"demo:gadget": {"entries": {"demo:basic": {"protocol_id": 0}}, "protocol_id": 4}}
                 """));
         assertEquals(before, after);
@@ -74,7 +78,7 @@ class RegistryReportReaderTest {
 
     @Test
     void theDefaultMayComeFirstAndRegistriesMayBeUnsorted() {
-        Registries registries = reader.read(tree("""
+        Registries registries = read(tree("""
                 {
                   "demo:zeta": {"default": "demo:a", "protocol_id": 1, "entries": {"demo:a": {"protocol_id": 0}}},
                   "demo:alpha": {"entries": {}, "protocol_id": 0}
@@ -84,10 +88,9 @@ class RegistryReportReaderTest {
     }
 
     @Test
-    void aMissingReportNamesTheVersionAndTheFile() {
+    void aMissingReportGivesNoRegistriesInsteadOfAnError() {
         VersionTree empty = new InMemoryVersionTree(release("9.1"), Map.of());
-        VersionReadException failure = assertThrows(VersionReadException.class, () -> reader.read(empty));
-        assertEquals("Version 9.1, reports/registries.json: the report is missing", failure.getMessage());
+        assertEquals(Optional.empty(), reader.read(empty));
     }
 
     @Test

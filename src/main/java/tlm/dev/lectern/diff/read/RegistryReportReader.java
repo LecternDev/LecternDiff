@@ -29,11 +29,14 @@ public final class RegistryReportReader {
         this.json = json;
     }
 
-    public Registries read(VersionTree tree) {
+    public Optional<Registries> read(VersionTree tree) {
         ReportContext report = new ReportContext(tree.version().id(), FILE);
-        JsonValue root = report.parse(tree, json);
+        Optional<JsonValue> root = report.parse(tree, json);
+        if (root.isEmpty()) {
+            return Optional.empty();
+        }
         try {
-            return new Registries(readRegistries(report, root));
+            return Optional.of(new Registries(readRegistries(report, root.get())));
         } catch (IllegalArgumentException e) {
             throw report.failure(e.getMessage(), e);
         }

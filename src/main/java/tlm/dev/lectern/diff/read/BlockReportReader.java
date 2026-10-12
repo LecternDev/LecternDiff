@@ -36,11 +36,14 @@ public final class BlockReportReader {
         this.json = json;
     }
 
-    public Blocks read(VersionTree tree) {
+    public Optional<Blocks> read(VersionTree tree) {
         ReportContext report = new ReportContext(tree.version().id(), FILE);
-        JsonValue root = report.parse(tree, json);
+        Optional<JsonValue> root = report.parse(tree, json);
+        if (root.isEmpty()) {
+            return Optional.empty();
+        }
         try {
-            return new Blocks(readBlocks(report, root));
+            return Optional.of(new Blocks(readBlocks(report, root.get())));
         } catch (IllegalArgumentException e) {
             throw report.failure(e.getMessage(), e);
         }

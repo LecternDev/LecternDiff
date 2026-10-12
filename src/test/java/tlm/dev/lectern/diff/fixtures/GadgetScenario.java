@@ -136,6 +136,7 @@ public final class GadgetScenario {
                 "kind": "release"
               },
               "schema_version": 1,
+              "skipped": [],
               "to": {
                 "id": "1.1",
                 "kind": "release"

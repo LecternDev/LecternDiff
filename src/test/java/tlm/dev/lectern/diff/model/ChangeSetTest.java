@@ -70,6 +70,27 @@ class ChangeSetTest {
     }
 
     @Test
+    void skippedDomainsAreSortedInTheOrderOfTheSchema() {
+        SkippedDomain blocks = new SkippedDomain(ChangeDomain.BLOCKS, SkipSide.FROM, new SkipReason.ReportMissing());
+        SkippedDomain registries = new SkippedDomain(ChangeDomain.REGISTRIES, SkipSide.BOTH, new SkipReason.ReportMissing());
+        ChangeSet changeSet = new ChangeSet(release("1.0"), release("1.1"), List.of(blocks, registries), List.of());
+        assertEquals(List.of(registries, blocks), changeSet.skipped());
+    }
+
+    @Test
+    void aDomainCannotBeSkippedTwice() {
+        SkippedDomain first = new SkippedDomain(ChangeDomain.BLOCKS, SkipSide.FROM, new SkipReason.ReportMissing());
+        SkippedDomain second = new SkippedDomain(ChangeDomain.BLOCKS, SkipSide.TO, new SkipReason.ReportMissing());
+        assertThrows(IllegalArgumentException.class,
+                () -> new ChangeSet(release("1.0"), release("1.1"), List.of(first, second), List.of()));
+    }
+
+    @Test
+    void aChangeSetBuiltWithoutSkippedDomainsSkipsNothing() {
+        assertEquals(List.of(), new ChangeSet(release("1.0"), release("1.1"), List.of()).skipped());
+    }
+
+    @Test
     void schemaVersionIsOne() {
         assertEquals(1, new ChangeSet(release("1.0"), release("1.1"), List.of()).schemaVersion());
     }

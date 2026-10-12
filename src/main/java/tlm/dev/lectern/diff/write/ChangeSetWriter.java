@@ -9,6 +9,7 @@ import tlm.dev.lectern.diff.model.BlockChange;
 import tlm.dev.lectern.diff.model.Change;
 import tlm.dev.lectern.diff.model.ChangeSet;
 import tlm.dev.lectern.diff.model.RegistryChange;
+import tlm.dev.lectern.diff.model.SkippedDomain;
 import tlm.dev.lectern.diff.model.VersionRef;
 
 public final class ChangeSetWriter {
@@ -30,6 +31,7 @@ public final class ChangeSetWriter {
                 .put("schema_version", changeSet.schemaVersion())
                 .put("from", render(changeSet.from()))
                 .put("to", render(changeSet.to()))
+                .put("skipped", new JsonArray(changeSet.skipped().stream().<JsonValue>map(ChangeSetWriter::render).toList()))
                 .put("changes", new JsonArray(changes))
                 .build();
         return json.write(document);
@@ -40,6 +42,14 @@ public final class ChangeSetWriter {
             case RegistryChange registryChange -> registryRenderer.render(registryChange);
             case BlockChange blockChange -> blockRenderer.render(blockChange);
         };
+    }
+
+    private static JsonObject render(SkippedDomain skipped) {
+        return JsonObject.builder()
+                .put("domain", skipped.domain().label())
+                .put("side", skipped.side().label())
+                .put("reason", skipped.reason().label())
+                .build();
     }
 
     private static JsonObject render(VersionRef version) {

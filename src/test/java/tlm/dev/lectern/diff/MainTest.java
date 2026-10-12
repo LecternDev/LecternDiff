@@ -170,22 +170,39 @@ class MainTest {
     }
 
     @Test
-    void aVersionWithoutItsRegistriesReportGivesExitCodeOneAndNamesTheVersionAndTheFile() throws IOException {
+    void aVersionWithoutAnyReportSkipsEveryDomainAndStillSucceeds() throws IOException {
         Path empty = Files.createDirectories(workDirectory.resolve("empty"));
         Outcome outcome = run(diffArguments(before(), empty));
-        assertEquals(Main.EXIT_FAILURE, outcome.exitCode());
-        assertEquals("error: Version 1.1, reports/registries.json: the report is missing\n", outcome.err());
-        assertEquals("", outcome.out());
+        assertEquals(Main.EXIT_OK, outcome.exitCode());
+        assertTrue(outcome.out().contains("""
+                  "skipped": [
+                    {
+                      "domain": "registries",
+                      "reason": "report_missing",
+                      "side": "to"
+                    },
+                    {
+                      "domain": "blocks",
+                      "reason": "report_missing",
+                      "side": "to"
+                    }
+                  ],
+                """), outcome.out());
+        assertTrue(outcome.out().contains("\"changes\": [],"), outcome.out());
+        assertEquals("", outcome.err());
     }
 
     @Test
-    void aVersionWithoutItsBlocksReportGivesExitCodeOneAndNamesTheVersionAndTheFile() throws IOException {
+    void aVersionWithoutItsBlocksReportSkipsOnlyTheBlocksDomain() throws IOException {
         Path reports = Files.createDirectories(workDirectory.resolve("partial").resolve("reports"));
         Files.writeString(reports.resolve("registries.json"), GadgetScenario.AFTER, StandardCharsets.UTF_8);
         Outcome outcome = run(diffArguments(before(), workDirectory.resolve("partial")));
-        assertEquals(Main.EXIT_FAILURE, outcome.exitCode());
-        assertEquals("error: Version 1.1, reports/blocks.json: the report is missing\n", outcome.err());
-        assertEquals("", outcome.out());
+        assertEquals(Main.EXIT_OK, outcome.exitCode());
+        assertTrue(outcome.out().contains("\"domain\": \"blocks\""), outcome.out());
+        assertTrue(outcome.out().contains("\"side\": \"to\""), outcome.out());
+        assertTrue(outcome.out().contains("\"type\": \"registry.added\""), outcome.out());
+        assertTrue(!outcome.out().contains("\"type\": \"block."), outcome.out());
+        assertEquals("", outcome.err());
     }
 
     @Test

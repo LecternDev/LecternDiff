@@ -72,6 +72,24 @@ class ModelValuesTest {
     }
 
     @Test
+    void everyChangeDomainHasALabelAndARankInTheOrderOfTheSchema() {
+        assertEquals(List.of("registries", "blocks"), ChangeDomain.ALL.stream().map(ChangeDomain::label).toList());
+        assertEquals(List.of(0, 1), ChangeDomain.ALL.stream().map(ChangeDomain::rank).toList());
+        assertEquals(
+                Set.of(ChangeDomain.class.getPermittedSubclasses()),
+                ChangeDomain.ALL.stream().<Class<?>>map(Object::getClass).collect(Collectors.toSet()));
+    }
+
+    @Test
+    void everySkipSideAndReasonHasItsLabel() {
+        assertEquals(List.of("from", "to", "both"), SkipSide.ALL.stream().map(SkipSide::label).toList());
+        assertEquals(
+                Set.of(SkipSide.class.getPermittedSubclasses()),
+                SkipSide.ALL.stream().<Class<?>>map(Object::getClass).collect(Collectors.toSet()));
+        assertEquals("report_missing", new SkipReason.ReportMissing().label());
+    }
+
+    @Test
     void everyVersionKindHasItsSharedLabel() {
         assertEquals("release", new VersionKind.Release().label());
         assertEquals("release-candidate", new VersionKind.ReleaseCandidate().label());

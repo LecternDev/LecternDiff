@@ -2,6 +2,7 @@ package tlm.dev.lectern.diff;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.blockKey;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.property;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
@@ -12,49 +13,67 @@ import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.key;
 import static tlm.dev.lectern.diff.fixtures.VersionFixtures.release;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import tlm.dev.lectern.diff.fixtures.GadgetScenario;
 import tlm.dev.lectern.diff.fixtures.InMemoryVersionTree;
-import tlm.dev.lectern.diff.json.JsonReader;
-import tlm.dev.lectern.diff.model.ChangeSet;
-import tlm.dev.lectern.diff.blocks.BlockDiffer;
 import tlm.dev.lectern.diff.model.BlockAdded;
 import tlm.dev.lectern.diff.model.BlockPropertyAdded;
 import tlm.dev.lectern.diff.model.BlockStateIdsShifted;
+import tlm.dev.lectern.diff.model.ChangeDomain;
+import tlm.dev.lectern.diff.model.ChangeSet;
 import tlm.dev.lectern.diff.model.RegistryAdded;
 import tlm.dev.lectern.diff.model.RegistryChange;
 import tlm.dev.lectern.diff.model.RegistryEntryAdded;
 import tlm.dev.lectern.diff.model.RegistryEntryIdsShifted;
 import tlm.dev.lectern.diff.model.RegistryRemoved;
-import tlm.dev.lectern.diff.read.BlockReportReader;
-import tlm.dev.lectern.diff.read.RegistryReportReader;
+import tlm.dev.lectern.diff.model.SkipReason;
+import tlm.dev.lectern.diff.model.SkipSide;
+import tlm.dev.lectern.diff.model.SkippedDomain;
 import tlm.dev.lectern.diff.read.VersionReadException;
 import tlm.dev.lectern.diff.read.VersionTree;
-import tlm.dev.lectern.diff.ids.IdShiftClassifier;
-import tlm.dev.lectern.diff.registries.RegistryDiffer;
 
 class VersionDiffServiceTest {
 
-    private final VersionDiffService service = new VersionDiffService(
-            new RegistryReportReader(new JsonReader()),
-            new RegistryDiffer(new IdShiftClassifier()),
-            new BlockReportReader(new JsonReader()),
-            new BlockDiffer(new IdShiftClassifier()));
+    private static final String REGISTRIES = "reports/registries.json";
+    private static final String BLOCKS = "reports/blocks.json";
 
-    private static VersionTree tree(String versionId, String registriesJson, String blocksJson) {
-        return new InMemoryVersionTree(release(versionId),
-                Map.of("reports/registries.json", registriesJson, "reports/blocks.json", blocksJson));
+    private final VersionDiffService service = Composition.diffService();
+
+    private static VersionTree tree(String versionId, Map<String, String> reports) {
+        return new InMemoryVersionTree(release(versionId), reports);
+    }
+
+    private static VersionTree before() {
+        return tree("1.0", Map.of(REGISTRIES, GadgetScenario.BEFORE, BLOCKS, GadgetScenario.BLOCKS_BEFORE));
+    }
+
+    private static VersionTree after() {
+        return tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, GadgetScenario.BLOCKS_AFTER));
+    }
+
+    private static VersionTree without(VersionTree complete, String report) {
+        Map<String, String> files = new HashMap<>();
+        for (String file : List.of(REGISTRIES, BLOCKS)) {
+            if (!file.equals(report)) {
+                files.put(file, complete.readText(file).orElseThrow());
+            }
+        }
+        return new InMemoryVersionTree(complete.version(), files);
+    }
+
+    private static SkippedDomain skipped(ChangeDomain domain, SkipSide side) {
+        return new SkippedDomain(domain, side, new SkipReason.ReportMissing());
     }
 
     @Test
     void diffsTwoVersionTreesFromTheirReportsInOneSortedChangeSet() {
-        ChangeSet changeSet = service.diff(
-                tree("1.0", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE),
-                tree("1.1", GadgetScenario.AFTER, GadgetScenario.BLOCKS_AFTER));
+        ChangeSet changeSet = service.diff(before(), after());
         assertEquals(release("1.0"), changeSet.from());
         assertEquals(release("1.1"), changeSet.to());
+        assertEquals(List.of(), changeSet.skipped());
         assertEquals(
                 List.of(new RegistryEntryAdded(key("demo:gadget"), entry("demo:glossy"), id(1)),
                         new RegistryEntryIdsShifted(key("demo:gadget"), 2, id(1)),
@@ -67,33 +86,77 @@ class VersionDiffServiceTest {
     }
 
     @Test
-    void comparingAVersionWithItselfGivesNoChange() {
-        VersionTree same = tree("1.0", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE);
-        assertEquals(List.of(), service.diff(same, same).changes());
-    }
-
-    @Test
-    void aVersionWhoseRegistriesReportCannotBeReadStopsTheDiffAndNamesThatVersion() {
-        VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(
-                tree("1.0", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE),
-                tree("1.1", "{\"demo:gadget\": []}", GadgetScenario.BLOCKS_AFTER)));
-        assertEquals("Version 1.1, reports/registries.json: registry demo:gadget is not an object", failure.getMessage());
-    }
-
-    @Test
-    void aVersionWhoseBlocksReportCannotBeReadStopsTheDiffAndNamesThatVersion() {
-        VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(
-                tree("1.0", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE),
-                tree("1.1", GadgetScenario.AFTER, "{\"demo:crate\": []}")));
-        assertEquals("Version 1.1, reports/blocks.json: block demo:crate is not an object", failure.getMessage());
+    void comparingAVersionWithItselfGivesNoChangeAndNothingSkipped() {
+        ChangeSet changeSet = service.diff(before(), before());
+        assertEquals(List.of(), changeSet.changes());
+        assertEquals(List.of(), changeSet.skipped());
     }
 
     @Test
     void theChangesOfBothDomainsAreInTheOrderOfTheSchema() {
-        ChangeSet changeSet = service.diff(
-                tree("1.0", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE),
-                tree("1.1", GadgetScenario.AFTER, GadgetScenario.BLOCKS_AFTER));
-        List<Boolean> registryFlags = changeSet.changes().stream().map(change -> change instanceof RegistryChange).toList();
+        List<Boolean> registryFlags = service.diff(before(), after()).changes().stream()
+                .map(change -> change instanceof RegistryChange).toList();
         assertEquals(List.of(true, true, true, true, false, false, false), registryFlags);
+    }
+
+    @Test
+    void aReportMissingFromTheFirstVersionSkipsThatDomainAndKeepsTheOthers() {
+        ChangeSet changeSet = service.diff(without(before(), BLOCKS), after());
+        assertEquals(List.of(skipped(ChangeDomain.BLOCKS, SkipSide.FROM)), changeSet.skipped());
+        assertEquals(4, changeSet.changes().size());
+        assertTrue(changeSet.changes().stream().allMatch(change -> change instanceof RegistryChange));
+    }
+
+    @Test
+    void aReportMissingFromTheSecondVersionSkipsThatDomainAndKeepsTheOthers() {
+        ChangeSet changeSet = service.diff(before(), without(after(), REGISTRIES));
+        assertEquals(List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.TO)), changeSet.skipped());
+        assertEquals(3, changeSet.changes().size());
+        assertTrue(changeSet.changes().stream().noneMatch(change -> change instanceof RegistryChange));
+    }
+
+    @Test
+    void aReportMissingFromBothVersionsIsSkippedWithTheSideBoth() {
+        ChangeSet changeSet = service.diff(without(before(), BLOCKS), without(after(), BLOCKS));
+        assertEquals(List.of(skipped(ChangeDomain.BLOCKS, SkipSide.BOTH)), changeSet.skipped());
+        assertEquals(4, changeSet.changes().size());
+    }
+
+    @Test
+    void aVersionWithoutAnyReportSkipsEveryDomainInTheOrderOfTheSchema() {
+        ChangeSet changeSet = service.diff(tree("1.0", Map.of()), tree("1.1", Map.of()));
+        assertEquals(
+                List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.BOTH), skipped(ChangeDomain.BLOCKS, SkipSide.BOTH)),
+                changeSet.skipped());
+        assertEquals(List.of(), changeSet.changes());
+    }
+
+    @Test
+    void aMissingReportIsNeverReadAsEverythingAddedOrRemoved() {
+        ChangeSet changeSet = service.diff(tree("1.0", Map.of()), after());
+        assertEquals(List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.FROM), skipped(ChangeDomain.BLOCKS, SkipSide.FROM)),
+                changeSet.skipped());
+        assertEquals(List.of(), changeSet.changes());
+    }
+
+    @Test
+    void anIllegibleRegistriesReportStopsTheDiffAndNamesThatVersion() {
+        VersionTree broken = tree("1.1", Map.of(REGISTRIES, "{\"demo:gadget\": []}", BLOCKS, GadgetScenario.BLOCKS_AFTER));
+        VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
+        assertEquals("Version 1.1, reports/registries.json: registry demo:gadget is not an object", failure.getMessage());
+    }
+
+    @Test
+    void anIllegibleBlocksReportStopsTheDiffAndNamesThatVersion() {
+        VersionTree broken = tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, "{\"demo:crate\": []}"));
+        VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
+        assertEquals("Version 1.1, reports/blocks.json: block demo:crate is not an object", failure.getMessage());
+    }
+
+    @Test
+    void anIllegibleReportStaysAStrongErrorEvenWhenTheOtherVersionHasNone() {
+        VersionTree broken = tree("1.1", Map.of(BLOCKS, "{\"demo:crate\": []}"));
+        VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(tree("1.0", Map.of()), broken));
+        assertEquals("Version 1.1, reports/blocks.json: block demo:crate is not an object", failure.getMessage());
     }
 }

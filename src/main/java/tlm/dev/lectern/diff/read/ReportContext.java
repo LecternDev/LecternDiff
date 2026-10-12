@@ -1,5 +1,6 @@
 package tlm.dev.lectern.diff.read;
 
+import java.util.Optional;
 import java.util.Set;
 import tlm.dev.lectern.diff.json.JsonArray;
 import tlm.dev.lectern.diff.json.JsonBoolean;
@@ -21,10 +22,13 @@ final class ReportContext {
         this.file = file;
     }
 
-    JsonValue parse(VersionTree tree, JsonReader json) {
-        String text = tree.readText(file).orElseThrow(() -> failure("the report is missing"));
+    Optional<JsonValue> parse(VersionTree tree, JsonReader json) {
+        Optional<String> text = tree.readText(file);
+        if (text.isEmpty()) {
+            return Optional.empty();
+        }
         try {
-            return json.read(text);
+            return Optional.of(json.read(text.get()));
         } catch (JsonSyntaxException e) {
             throw failure("not valid JSON: " + e.getMessage(), e);
         }
