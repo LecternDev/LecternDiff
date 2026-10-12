@@ -23,20 +23,24 @@ class MainTest {
     private record Outcome(int exitCode, String out, String err) {
     }
 
-    private Path versionFolder(String name, String registriesJson, String blocksJson, String packetsJson) throws IOException {
+    private Path versionFolder(String name, String registriesJson, String blocksJson, String packetsJson, String commandsJson)
+            throws IOException {
         Path reports = Files.createDirectories(workDirectory.resolve(name).resolve("reports"));
         Files.writeString(reports.resolve("registries.json"), registriesJson, StandardCharsets.UTF_8);
         Files.writeString(reports.resolve("blocks.json"), blocksJson, StandardCharsets.UTF_8);
         Files.writeString(reports.resolve("packets.json"), packetsJson, StandardCharsets.UTF_8);
+        Files.writeString(reports.resolve("commands.json"), commandsJson, StandardCharsets.UTF_8);
         return workDirectory.resolve(name);
     }
 
     private Path before() throws IOException {
-        return versionFolder("before", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE, GadgetScenario.PACKETS_BEFORE);
+        return versionFolder("before", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE, GadgetScenario.PACKETS_BEFORE,
+                GadgetScenario.COMMANDS_BEFORE);
     }
 
     private Path after() throws IOException {
-        return versionFolder("after", GadgetScenario.AFTER, GadgetScenario.BLOCKS_AFTER, GadgetScenario.PACKETS_AFTER);
+        return versionFolder("after", GadgetScenario.AFTER, GadgetScenario.BLOCKS_AFTER, GadgetScenario.PACKETS_AFTER,
+                GadgetScenario.COMMANDS_AFTER);
     }
 
     private static String[] diffArguments(Path from, Path to) {
@@ -191,6 +195,11 @@ class MainTest {
                       "domain": "packets",
                       "reason": "report_missing",
                       "side": "to"
+                    },
+                    {
+                      "domain": "commands",
+                      "reason": "report_missing",
+                      "side": "to"
                     }
                   ],
                 """), outcome.out());
@@ -206,9 +215,11 @@ class MainTest {
         assertEquals(Main.EXIT_OK, outcome.exitCode());
         assertTrue(outcome.out().contains("\"domain\": \"blocks\""), outcome.out());
         assertTrue(outcome.out().contains("\"domain\": \"packets\""), outcome.out());
+        assertTrue(outcome.out().contains("\"domain\": \"commands\""), outcome.out());
         assertTrue(outcome.out().contains("\"side\": \"to\""), outcome.out());
         assertTrue(outcome.out().contains("\"type\": \"registry.added\""), outcome.out());
         assertTrue(!outcome.out().contains("\"type\": \"block."), outcome.out());
+        assertTrue(!outcome.out().contains("\"type\": \"command."), outcome.out());
         assertEquals("", outcome.err());
     }
 
@@ -216,7 +227,7 @@ class MainTest {
     void anUnknownReportFormatGivesExitCodeOneAndNamesTheVersionAndTheFile() throws IOException {
         Path unknown = versionFolder("unknown",
                 "{\"demo:gadget\": {\"entries\": {}, \"protocol_id\": 0, \"tags\": []}}", GadgetScenario.BLOCKS_AFTER,
-                GadgetScenario.PACKETS_AFTER);
+                GadgetScenario.PACKETS_AFTER, GadgetScenario.COMMANDS_AFTER);
         Outcome outcome = run(diffArguments(before(), unknown));
         assertEquals(Main.EXIT_FAILURE, outcome.exitCode());
         assertEquals("error: Version 1.1, reports/registries.json: unknown key 'tags' in registry demo:gadget\n", outcome.err());
@@ -226,11 +237,22 @@ class MainTest {
     @Test
     void anUnknownBlocksFormatGivesExitCodeOneAndNamesTheVersionAndTheFile() throws IOException {
         Path unknown = versionFolder("unknown", GadgetScenario.AFTER,
-                "{\"demo:crate\": {\"states\": [{\"default\": true, \"id\": 0, \"weight\": 3}]}}", GadgetScenario.PACKETS_AFTER);
+                "{\"demo:crate\": {\"states\": [{\"default\": true, \"id\": 0, \"weight\": 3}]}}", GadgetScenario.PACKETS_AFTER,
+                GadgetScenario.COMMANDS_AFTER);
         Outcome outcome = run(diffArguments(before(), unknown));
         assertEquals(Main.EXIT_FAILURE, outcome.exitCode());
         assertEquals("error: Version 1.1, reports/blocks.json: unknown key 'weight' in a state of block demo:crate\n",
                 outcome.err());
+        assertEquals("", outcome.out());
+    }
+
+    @Test
+    void anUnknownCommandsFormatGivesExitCodeOneAndNamesTheVersionAndTheFile() throws IOException {
+        Path unknown = versionFolder("unknown", GadgetScenario.AFTER, GadgetScenario.BLOCKS_AFTER, GadgetScenario.PACKETS_AFTER,
+                "{\"type\": \"root\", \"children\": {\"gadget\": {\"type\": \"literal\", \"hidden\": true}}}");
+        Outcome outcome = run(diffArguments(before(), unknown));
+        assertEquals(Main.EXIT_FAILURE, outcome.exitCode());
+        assertEquals("error: Version 1.1, reports/commands.json: unknown key 'hidden' in node gadget\n", outcome.err());
         assertEquals("", outcome.out());
     }
 }

@@ -8,6 +8,11 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.property;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.name;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.number;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.path;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.properties;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.requires;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.direction;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.packet;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.phase;
@@ -19,6 +24,7 @@ import static tlm.dev.lectern.diff.fixtures.VersionFixtures.release;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tlm.dev.lectern.diff.fixtures.GadgetScenario;
 import tlm.dev.lectern.diff.fixtures.InMemoryVersionTree;
@@ -27,8 +33,15 @@ import tlm.dev.lectern.diff.model.BlockChange;
 import tlm.dev.lectern.diff.model.BlockPropertyAdded;
 import tlm.dev.lectern.diff.model.BlockStateIdsShifted;
 import tlm.dev.lectern.diff.model.ChangeDomain;
-import tlm.dev.lectern.diff.model.CommandChange;
 import tlm.dev.lectern.diff.model.ChangeSet;
+import tlm.dev.lectern.diff.model.CommandAdded;
+import tlm.dev.lectern.diff.model.CommandChange;
+import tlm.dev.lectern.diff.model.CommandExecutableModified;
+import tlm.dev.lectern.diff.model.CommandNodeAdded;
+import tlm.dev.lectern.diff.model.CommandPermissionsModified;
+import tlm.dev.lectern.diff.model.CommandPropertiesModified;
+import tlm.dev.lectern.diff.model.CommandRemoved;
+import tlm.dev.lectern.diff.model.NodeKind;
 import tlm.dev.lectern.diff.model.PacketAdded;
 import tlm.dev.lectern.diff.model.PacketChange;
 import tlm.dev.lectern.diff.model.PacketIdModified;
@@ -51,6 +64,7 @@ class VersionDiffServiceTest {
     private static final String REGISTRIES = "reports/registries.json";
     private static final String BLOCKS = "reports/blocks.json";
     private static final String PACKETS = "reports/packets.json";
+    private static final String COMMANDS = "reports/commands.json";
 
     private final VersionDiffService service = Composition.diffService();
 
@@ -60,19 +74,19 @@ class VersionDiffServiceTest {
 
     private static VersionTree before() {
         return tree("1.0", Map.of(REGISTRIES, GadgetScenario.BEFORE, BLOCKS, GadgetScenario.BLOCKS_BEFORE,
-                PACKETS, GadgetScenario.PACKETS_BEFORE));
+                PACKETS, GadgetScenario.PACKETS_BEFORE, COMMANDS, GadgetScenario.COMMANDS_BEFORE));
     }
 
     private static VersionTree after() {
         return tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, GadgetScenario.BLOCKS_AFTER,
-                PACKETS, GadgetScenario.PACKETS_AFTER));
+                PACKETS, GadgetScenario.PACKETS_AFTER, COMMANDS, GadgetScenario.COMMANDS_AFTER));
     }
 
     private static VersionTree without(VersionTree complete, String report) {
         Map<String, String> files = new HashMap<>();
-        for (String file : List.of(REGISTRIES, BLOCKS, PACKETS)) {
+        for (String file : List.of(REGISTRIES, BLOCKS, PACKETS, COMMANDS)) {
             if (!file.equals(report)) {
-                files.put(file, complete.readText(file).orElseThrow());
+                complete.readText(file).ifPresent(text -> files.put(file, text));
             }
         }
         return new InMemoryVersionTree(complete.version(), files);
@@ -101,7 +115,15 @@ class VersionDiffServiceTest {
                         new PacketIdModified(phase("play"), direction("serverbound"), packet("demo:chat"), id(0), id(1)),
                         new PacketIdModified(phase("play"), direction("serverbound"), packet("demo:jump"), id(1), id(0)),
                         new PacketIdsShifted(phase("play"), direction("clientbound"), 2, id(1)),
-                        new PacketPhaseRemoved(phase("status"), 1)),
+                        new PacketPhaseRemoved(phase("status"), 1),
+                        new CommandAdded(name("dial"), NodeKind.LITERAL, 3),
+                        new CommandPermissionsModified(path("gadget", "mode"), Optional.empty(), Optional.of(requires("gamemasters"))),
+                        new CommandPropertiesModified(path("gadget", "size"),
+                                Optional.of(properties(Map.of("min", number("0"), "max", number("3")))),
+                                Optional.of(properties(Map.of("min", number("0"), "max", number("9"))))),
+                        new CommandNodeAdded(path("gadget", "tint"), NodeKind.ARGUMENT, 2),
+                        new CommandExecutableModified(path("lamp"), true, false),
+                        new CommandRemoved(name("legacy"), NodeKind.LITERAL, 2)),
                 changeSet.changes());
     }
 
@@ -123,14 +145,14 @@ class VersionDiffServiceTest {
                 })
                 .distinct()
                 .toList();
-        assertEquals(List.of("registries", "blocks", "packets"), domains);
+        assertEquals(List.of("registries", "blocks", "packets", "commands"), domains);
     }
 
     @Test
     void aReportMissingFromTheFirstVersionSkipsThatDomainAndKeepsTheOthers() {
         ChangeSet changeSet = service.diff(without(before(), BLOCKS), after());
         assertEquals(List.of(skipped(ChangeDomain.BLOCKS, SkipSide.FROM)), changeSet.skipped());
-        assertEquals(10, changeSet.changes().size());
+        assertEquals(16, changeSet.changes().size());
         assertTrue(changeSet.changes().stream().noneMatch(change -> change instanceof BlockChange));
     }
 
@@ -138,7 +160,7 @@ class VersionDiffServiceTest {
     void aReportMissingFromTheSecondVersionSkipsThatDomainAndKeepsTheOthers() {
         ChangeSet changeSet = service.diff(before(), without(after(), REGISTRIES));
         assertEquals(List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.TO)), changeSet.skipped());
-        assertEquals(9, changeSet.changes().size());
+        assertEquals(15, changeSet.changes().size());
         assertTrue(changeSet.changes().stream().noneMatch(change -> change instanceof RegistryChange));
     }
 
@@ -146,7 +168,7 @@ class VersionDiffServiceTest {
     void aReportMissingFromBothVersionsIsSkippedWithTheSideBoth() {
         ChangeSet changeSet = service.diff(without(before(), BLOCKS), without(after(), BLOCKS));
         assertEquals(List.of(skipped(ChangeDomain.BLOCKS, SkipSide.BOTH)), changeSet.skipped());
-        assertEquals(10, changeSet.changes().size());
+        assertEquals(16, changeSet.changes().size());
     }
 
     @Test
@@ -159,11 +181,33 @@ class VersionDiffServiceTest {
     }
 
     @Test
+    void aCommandReportMissingFromOneVersionSkipsTheCommandsDomainOnThatSide() {
+        ChangeSet changeSet = service.diff(before(), without(after(), COMMANDS));
+        assertEquals(List.of(skipped(ChangeDomain.COMMANDS, SkipSide.TO)), changeSet.skipped());
+        assertEquals(13, changeSet.changes().size());
+        assertTrue(changeSet.changes().stream().noneMatch(change -> change instanceof CommandChange));
+        ChangeSet both = service.diff(without(before(), COMMANDS), without(after(), COMMANDS));
+        assertEquals(List.of(skipped(ChangeDomain.COMMANDS, SkipSide.BOTH)), both.skipped());
+        ChangeSet first = service.diff(without(before(), COMMANDS), after());
+        assertEquals(List.of(skipped(ChangeDomain.COMMANDS, SkipSide.FROM)), first.skipped());
+    }
+
+    @Test
+    void severalDomainsSkippedOnDifferentSidesAreListedInTheOrderOfTheSchema() {
+        ChangeSet changeSet = service.diff(without(without(before(), COMMANDS), PACKETS), without(after(), BLOCKS));
+        assertEquals(
+                List.of(skipped(ChangeDomain.BLOCKS, SkipSide.TO), skipped(ChangeDomain.PACKETS, SkipSide.FROM),
+                        skipped(ChangeDomain.COMMANDS, SkipSide.FROM)),
+                changeSet.skipped());
+        assertEquals(4, changeSet.changes().size());
+    }
+
+    @Test
     void aVersionWithoutAnyReportSkipsEveryDomainInTheOrderOfTheSchema() {
         ChangeSet changeSet = service.diff(tree("1.0", Map.of()), tree("1.1", Map.of()));
         assertEquals(
                 List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.BOTH), skipped(ChangeDomain.BLOCKS, SkipSide.BOTH),
-                        skipped(ChangeDomain.PACKETS, SkipSide.BOTH)),
+                        skipped(ChangeDomain.PACKETS, SkipSide.BOTH), skipped(ChangeDomain.COMMANDS, SkipSide.BOTH)),
                 changeSet.skipped());
         assertEquals(List.of(), changeSet.changes());
     }
@@ -173,7 +217,7 @@ class VersionDiffServiceTest {
         ChangeSet changeSet = service.diff(tree("1.0", Map.of()), after());
         assertEquals(
                 List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.FROM), skipped(ChangeDomain.BLOCKS, SkipSide.FROM),
-                        skipped(ChangeDomain.PACKETS, SkipSide.FROM)),
+                        skipped(ChangeDomain.PACKETS, SkipSide.FROM), skipped(ChangeDomain.COMMANDS, SkipSide.FROM)),
                 changeSet.skipped());
         assertEquals(List.of(), changeSet.changes());
     }
@@ -181,7 +225,7 @@ class VersionDiffServiceTest {
     @Test
     void anIllegibleRegistriesReportStopsTheDiffAndNamesThatVersion() {
         VersionTree broken = tree("1.1", Map.of(REGISTRIES, "{\"demo:gadget\": []}", BLOCKS, GadgetScenario.BLOCKS_AFTER,
-                PACKETS, GadgetScenario.PACKETS_AFTER));
+                PACKETS, GadgetScenario.PACKETS_AFTER, COMMANDS, GadgetScenario.COMMANDS_AFTER));
         VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
         assertEquals("Version 1.1, reports/registries.json: registry demo:gadget is not an object", failure.getMessage());
     }
@@ -189,7 +233,7 @@ class VersionDiffServiceTest {
     @Test
     void anIllegibleBlocksReportStopsTheDiffAndNamesThatVersion() {
         VersionTree broken = tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, "{\"demo:crate\": []}",
-                PACKETS, GadgetScenario.PACKETS_AFTER));
+                PACKETS, GadgetScenario.PACKETS_AFTER, COMMANDS, GadgetScenario.COMMANDS_AFTER));
         VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
         assertEquals("Version 1.1, reports/blocks.json: block demo:crate is not an object", failure.getMessage());
     }
@@ -197,9 +241,17 @@ class VersionDiffServiceTest {
     @Test
     void anIllegiblePacketsReportStopsTheDiffAndNamesThatVersion() {
         VersionTree broken = tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, GadgetScenario.BLOCKS_AFTER,
-                PACKETS, "{\"play\": []}"));
+                PACKETS, "{\"play\": []}", COMMANDS, GadgetScenario.COMMANDS_AFTER));
         VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
         assertEquals("Version 1.1, reports/packets.json: phase play is not an object", failure.getMessage());
+    }
+
+    @Test
+    void anIllegibleCommandsReportStopsTheDiffAndNamesThatVersion() {
+        VersionTree broken = tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, GadgetScenario.BLOCKS_AFTER,
+                PACKETS, GadgetScenario.PACKETS_AFTER, COMMANDS, "{\"type\": \"literal\"}"));
+        VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
+        assertEquals("Version 1.1, reports/commands.json: the top node has type 'literal' instead of 'root'", failure.getMessage());
     }
 
     @Test
