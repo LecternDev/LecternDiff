@@ -39,6 +39,49 @@ public final class GadgetScenario {
             }
             """;
 
+    public static final String BLOCKS_BEFORE = """
+            {
+              "demo:crate": {"states": [{"default": true, "id": 0}]},
+              "demo:lamp": {
+                "properties": {"lit": ["true", "false"]},
+                "states": [
+                  {"id": 1, "properties": {"lit": "true"}},
+                  {"default": true, "id": 2, "properties": {"lit": "false"}}
+                ]
+              },
+              "demo:lever": {
+                "properties": {"mode": ["off", "on"]},
+                "states": [
+                  {"default": true, "id": 3, "properties": {"mode": "off"}},
+                  {"id": 4, "properties": {"mode": "on"}}
+                ]
+              }
+            }
+            """;
+
+    public static final String BLOCKS_AFTER = """
+            {
+              "demo:anvil": {"states": [{"default": true, "id": 0}]},
+              "demo:crate": {"definition": {"type": "demo:plain"}, "states": [{"default": true, "id": 1}]},
+              "demo:lamp": {
+                "properties": {"lit": ["true", "false"], "dim": ["low", "high"]},
+                "states": [
+                  {"id": 2, "properties": {"dim": "low", "lit": "true"}},
+                  {"default": true, "id": 3, "properties": {"dim": "low", "lit": "false"}},
+                  {"id": 4, "properties": {"dim": "high", "lit": "true"}},
+                  {"id": 5, "properties": {"dim": "high", "lit": "false"}}
+                ]
+              },
+              "demo:lever": {
+                "properties": {"mode": ["off", "on"]},
+                "states": [
+                  {"id": 6, "properties": {"mode": "off"}, "default": true},
+                  {"id": 7, "properties": {"mode": "on"}}
+                ]
+              }
+            }
+            """;
+
     public static final String EXPECTED_JSON = """
             {
               "changes": [
@@ -65,6 +108,37 @@ public final class GadgetScenario {
                   "protocol_id": 1,
                   "registry": "demo:widget",
                   "type": "registry.added"
+                },
+                {
+                  "block_count": 2,
+                  "first_id": 0,
+                  "state_count": 3,
+                  "type": "block.state_ids_shifted"
+                },
+                {
+                  "block": "demo:anvil",
+                  "state_count": 1,
+                  "type": "block.added"
+                },
+                {
+                  "block": "demo:lamp",
+                  "property": "dim",
+                  "type": "block.property_added",
+                  "values": [
+                    "low",
+                    "high"
+                  ]
+                },
+                {
+                  "block": "demo:lamp",
+                  "new_default": {
+                    "dim": "low",
+                    "lit": "false"
+                  },
+                  "old_default": {
+                    "lit": "false"
+                  },
+                  "type": "block.default_state_modified"
                 }
               ],
               "from": {

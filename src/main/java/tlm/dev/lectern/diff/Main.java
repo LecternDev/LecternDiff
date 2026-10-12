@@ -2,13 +2,15 @@ package tlm.dev.lectern.diff;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import tlm.dev.lectern.diff.blocks.BlockDiffer;
+import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.json.CanonicalJsonWriter;
 import tlm.dev.lectern.diff.json.JsonReader;
+import tlm.dev.lectern.diff.read.BlockReportReader;
 import tlm.dev.lectern.diff.read.DirectoryVersionTree;
 import tlm.dev.lectern.diff.read.RegistryReportReader;
 import tlm.dev.lectern.diff.read.VersionReadException;
 import tlm.dev.lectern.diff.read.VersionTree;
-import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
 import tlm.dev.lectern.diff.write.BlockChangeRenderer;
 import tlm.dev.lectern.diff.write.ChangeSetWriter;
@@ -34,8 +36,12 @@ public final class Main {
 
     static Main create() {
         JsonReader jsonReader = new JsonReader();
+        IdShiftClassifier classifier = new IdShiftClassifier();
         VersionDiffService service = new VersionDiffService(
-                new RegistryReportReader(jsonReader), new RegistryDiffer(new IdShiftClassifier()));
+                new RegistryReportReader(jsonReader),
+                new RegistryDiffer(classifier),
+                new BlockReportReader(jsonReader),
+                new BlockDiffer(classifier));
         ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new BlockChangeRenderer(), new CanonicalJsonWriter());
         return new Main(service, writer);
     }

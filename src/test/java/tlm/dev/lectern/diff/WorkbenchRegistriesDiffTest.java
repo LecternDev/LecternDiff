@@ -31,25 +31,28 @@ import tlm.dev.lectern.diff.model.RegistryRemoved;
 import tlm.dev.lectern.diff.model.VersionKind;
 import tlm.dev.lectern.diff.read.RegistryReportReader;
 import tlm.dev.lectern.diff.read.VersionTree;
+import tlm.dev.lectern.diff.read.VersionTree;
 import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
 import tlm.dev.lectern.diff.write.BlockChangeRenderer;
 import tlm.dev.lectern.diff.write.ChangeSetWriter;
 import tlm.dev.lectern.diff.write.RegistryChangeRenderer;
 
-class WorkbenchDiffTest {
+class WorkbenchRegistriesDiffTest {
 
     private static final String RELEASE = "26.3";
     private static final String SNAPSHOT = "26.4-snapshot-3";
 
     private final JsonReader json = new JsonReader();
     private final RegistryReportReader reader = new RegistryReportReader(json);
-    private final VersionDiffService service =
-            new VersionDiffService(reader, new RegistryDiffer(new IdShiftClassifier()));
+    private final RegistryDiffer differ = new RegistryDiffer(new IdShiftClassifier());
 
     private ChangeSet diff(String from, String to) {
         requireReport(RegistryReportReader.FILE, from, to);
-        return service.diff(tree(from), tree(to));
+        VersionTree before = tree(from);
+        VersionTree after = tree(to);
+        List<Change> changes = List.copyOf(differ.diff(reader.read(before), reader.read(after)));
+        return new ChangeSet(before.version(), after.version(), changes);
     }
 
     private static <T extends Change> List<T> ofType(ChangeSet changeSet, Class<T> type) {
