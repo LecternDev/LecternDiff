@@ -10,6 +10,7 @@ import tlm.dev.lectern.diff.read.VersionReadException;
 import tlm.dev.lectern.diff.read.VersionTree;
 import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
+import tlm.dev.lectern.diff.write.BlockChangeRenderer;
 import tlm.dev.lectern.diff.write.ChangeSetWriter;
 import tlm.dev.lectern.diff.write.RegistryChangeRenderer;
 
@@ -35,7 +36,7 @@ public final class Main {
         JsonReader jsonReader = new JsonReader();
         VersionDiffService service = new VersionDiffService(
                 new RegistryReportReader(jsonReader), new RegistryDiffer(new IdShiftClassifier()));
-        ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new CanonicalJsonWriter());
+        ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new BlockChangeRenderer(), new CanonicalJsonWriter());
         return new Main(service, writer);
     }
 

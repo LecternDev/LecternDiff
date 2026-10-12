@@ -11,6 +11,7 @@ final class ChangeOrder {
             .thenComparing(change -> keyOf(change).detail());
 
     private static final int REGISTRIES = 0;
+    private static final int BLOCKS = 1;
 
     private record Key(int group, String subject, int rank, String detail) {
     }
@@ -31,6 +32,16 @@ final class ChangeOrder {
             case RegistryEntryIdModified modified ->
                     new Key(REGISTRIES, modified.registry().value(), 7, modified.entry().value());
             case RegistryEntryIdsShifted shifted -> new Key(REGISTRIES, shifted.registry().value(), 8, "");
+            case BlockStateIdsShifted _ -> new Key(BLOCKS, "", 0, "");
+            case BlockAdded added -> new Key(BLOCKS, added.block().value(), 1, "");
+            case BlockRemoved removed -> new Key(BLOCKS, removed.block().value(), 2, "");
+            case BlockPropertyAdded added -> new Key(BLOCKS, added.block().value(), 3, added.property().value());
+            case BlockPropertyRemoved removed -> new Key(BLOCKS, removed.block().value(), 4, removed.property().value());
+            case BlockPropertyValuesAdded added -> new Key(BLOCKS, added.block().value(), 5, added.property().value());
+            case BlockPropertyValuesRemoved removed ->
+                    new Key(BLOCKS, removed.block().value(), 6, removed.property().value());
+            case BlockDefaultStateModified modified -> new Key(BLOCKS, modified.block().value(), 7, "");
+            case BlockStateIdsModified modified -> new Key(BLOCKS, modified.block().value(), 8, "");
         };
     }
 }

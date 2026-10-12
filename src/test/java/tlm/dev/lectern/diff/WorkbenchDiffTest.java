@@ -33,6 +33,7 @@ import tlm.dev.lectern.diff.read.RegistryReportReader;
 import tlm.dev.lectern.diff.read.VersionTree;
 import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
+import tlm.dev.lectern.diff.write.BlockChangeRenderer;
 import tlm.dev.lectern.diff.write.ChangeSetWriter;
 import tlm.dev.lectern.diff.write.RegistryChangeRenderer;
 
@@ -178,7 +179,7 @@ class WorkbenchDiffTest {
     @Test
     void theWrittenChangeSetIsCanonicalAndStable() {
         ChangeSet changeSet = diff(RELEASE, SNAPSHOT);
-        ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new CanonicalJsonWriter());
+        ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new BlockChangeRenderer(), new CanonicalJsonWriter());
         String first = writer.write(changeSet);
         assertEquals(first, writer.write(diff(RELEASE, SNAPSHOT)));
         assertEquals(first, new CanonicalJsonWriter().write(json.read(first)));

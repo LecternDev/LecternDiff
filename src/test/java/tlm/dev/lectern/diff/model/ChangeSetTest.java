@@ -2,6 +2,11 @@ package tlm.dev.lectern.diff.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.blockKey;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.property;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.entry;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.key;
@@ -28,10 +33,21 @@ class ChangeSetTest {
             new RegistryEntryIdModified(key("demo:alpha"), entry("demo:a"), id(1), id(2)),
             new RegistryEntryIdsShifted(key("demo:alpha"), 7, id(4)),
             new RegistryAdded(key("demo:beta"), id(10), 0),
-            new RegistryEntryAdded(key("demo:beta"), entry("demo:z"), id(0)));
+            new RegistryEntryAdded(key("demo:beta"), entry("demo:z"), id(0)),
+            new BlockStateIdsShifted(4, 2, stateId(3)),
+            new BlockAdded(blockKey("demo:anvil"), 1),
+            new BlockRemoved(blockKey("demo:anvil"), 2),
+            new BlockPropertyAdded(blockKey("demo:anvil"), property("a"), values("x")),
+            new BlockPropertyAdded(blockKey("demo:anvil"), property("b"), values("x")),
+            new BlockPropertyRemoved(blockKey("demo:anvil"), property("a"), values("x")),
+            new BlockPropertyValuesAdded(blockKey("demo:anvil"), property("a"), values("y")),
+            new BlockPropertyValuesRemoved(blockKey("demo:anvil"), property("a"), values("y")),
+            new BlockDefaultStateModified(blockKey("demo:anvil"), state("a=x"), state("a=y")),
+            new BlockStateIdsModified(blockKey("demo:anvil"), 2, stateId(1), stateId(2)),
+            new BlockAdded(blockKey("demo:bell"), 3));
 
     @Test
-    void changesAreSortedByRegistryThenTypeThenEntry() {
+    void changesAreSortedByDomainThenSubjectThenTypeThenDetail() {
         List<Change> shuffled = new ArrayList<>(IN_CONTRACT_ORDER);
         Collections.shuffle(shuffled, new Random(7));
         assertEquals(IN_CONTRACT_ORDER, new ChangeSet(release("1.0"), release("1.1"), shuffled).changes());

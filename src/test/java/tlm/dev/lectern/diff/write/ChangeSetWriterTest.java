@@ -78,6 +78,74 @@ class ChangeSetWriterTest {
                   "first_id": 4,
                   "registry": "demo:zeta",
                   "type": "registry.entry_ids_shifted"
+                },
+                {
+                  "block_count": 2,
+                  "first_id": 3,
+                  "state_count": 5,
+                  "type": "block.state_ids_shifted"
+                },
+                {
+                  "block": "demo:anvil",
+                  "state_count": 1,
+                  "type": "block.added"
+                },
+                {
+                  "block": "demo:bell",
+                  "state_count": 4,
+                  "type": "block.removed"
+                },
+                {
+                  "block": "demo:crate",
+                  "property": "facing",
+                  "type": "block.property_added",
+                  "values": [
+                    "north",
+                    "south"
+                  ]
+                },
+                {
+                  "block": "demo:crate",
+                  "property": "lit",
+                  "type": "block.property_removed",
+                  "values": [
+                    "true",
+                    "false"
+                  ]
+                },
+                {
+                  "block": "demo:door",
+                  "property": "half",
+                  "type": "block.property_values_added",
+                  "values": [
+                    "upper"
+                  ]
+                },
+                {
+                  "block": "demo:door",
+                  "property": "hinge",
+                  "type": "block.property_values_removed",
+                  "values": [
+                    "middle"
+                  ]
+                },
+                {
+                  "block": "demo:lamp",
+                  "new_default": {
+                    "dim": "low",
+                    "lit": "false"
+                  },
+                  "old_default": {
+                    "lit": "false"
+                  },
+                  "type": "block.default_state_modified"
+                },
+                {
+                  "block": "demo:lever",
+                  "new_first_id": 14,
+                  "old_first_id": 10,
+                  "state_count": 2,
+                  "type": "block.state_ids_modified"
                 }
               ],
               "from": {
@@ -92,7 +160,7 @@ class ChangeSetWriterTest {
             }
             """;
 
-    private final ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new CanonicalJsonWriter());
+    private final ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new BlockChangeRenderer(), new CanonicalJsonWriter());
 
     private static ChangeSet oneOfEachTypeBetweenTwoVersions() {
         VersionRef to = new VersionRef(new VersionId("1.1-pre-1"), new VersionKind.PreRelease());
