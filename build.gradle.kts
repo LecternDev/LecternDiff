@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
     `java-library`
+    application
 }
 
 java {
@@ -10,12 +11,18 @@ java {
     }
 }
 
+application {
+    mainClass = "tlm.dev.lectern.diff.Main"
+}
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:6.0.0"))
+    implementation(libs.jackson.core)
+
+    testImplementation(platform(libs.junit.bom))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
@@ -27,8 +34,11 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
-    inputs.files(fileTree("src/main/java"), fileTree("src/test/java"), "ARCHITECTURE_RULES.md")
+    inputs.files(fileTree("src/main/java"), fileTree("src/test/java"))
         .withPropertyName("sourceRuleInputs")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(fileTree("../LecternWorkbench/generated") { include("*/reports/registries.json") })
+        .withPropertyName("workbenchReports")
         .withPathSensitivity(PathSensitivity.RELATIVE)
     testLogging {
         events("failed", "skipped")
