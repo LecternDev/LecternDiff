@@ -6,7 +6,9 @@ import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.json.CanonicalJsonWriter;
 import tlm.dev.lectern.diff.json.JsonReader;
 import tlm.dev.lectern.diff.model.ChangeDomain;
+import tlm.dev.lectern.diff.packets.PacketDiffer;
 import tlm.dev.lectern.diff.read.BlockReportReader;
+import tlm.dev.lectern.diff.read.PacketReportReader;
 import tlm.dev.lectern.diff.read.RegistryReportReader;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
 import tlm.dev.lectern.diff.write.BlockChangeRenderer;
@@ -27,9 +29,12 @@ final class Composition {
         RegistryDiffer registryDiffer = new RegistryDiffer(classifier);
         BlockReportReader blockReader = new BlockReportReader(jsonReader);
         BlockDiffer blockDiffer = new BlockDiffer(classifier);
+        PacketReportReader packetReader = new PacketReportReader(jsonReader);
+        PacketDiffer packetDiffer = new PacketDiffer(classifier);
         return new VersionDiffService(List.of(
                 new DomainComparison<>(ChangeDomain.REGISTRIES, registryReader::read, registryDiffer::diff),
-                new DomainComparison<>(ChangeDomain.BLOCKS, blockReader::read, blockDiffer::diff)));
+                new DomainComparison<>(ChangeDomain.BLOCKS, blockReader::read, blockDiffer::diff),
+                new DomainComparison<>(ChangeDomain.PACKETS, packetReader::read, packetDiffer::diff)));
     }
 
     static ChangeSetWriter changeSetWriter() {

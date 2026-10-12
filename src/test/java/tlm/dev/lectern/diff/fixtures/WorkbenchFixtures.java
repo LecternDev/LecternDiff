@@ -19,6 +19,7 @@ public final class WorkbenchFixtures {
             "1.20.4", new VersionKind.Release(),
             "1.21.11", new VersionKind.Release(),
             "26.3", new VersionKind.Release(),
+            "26.3-rc-3", new VersionKind.ReleaseCandidate(),
             "26.4-snapshot-3", new VersionKind.Snapshot());
 
     private WorkbenchFixtures() {

@@ -8,6 +8,9 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.property;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.direction;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.packet;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.phase;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.entry;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.key;
@@ -20,10 +23,17 @@ import org.junit.jupiter.api.Test;
 import tlm.dev.lectern.diff.fixtures.GadgetScenario;
 import tlm.dev.lectern.diff.fixtures.InMemoryVersionTree;
 import tlm.dev.lectern.diff.model.BlockAdded;
+import tlm.dev.lectern.diff.model.BlockChange;
 import tlm.dev.lectern.diff.model.BlockPropertyAdded;
 import tlm.dev.lectern.diff.model.BlockStateIdsShifted;
 import tlm.dev.lectern.diff.model.ChangeDomain;
 import tlm.dev.lectern.diff.model.ChangeSet;
+import tlm.dev.lectern.diff.model.PacketAdded;
+import tlm.dev.lectern.diff.model.PacketChange;
+import tlm.dev.lectern.diff.model.PacketIdModified;
+import tlm.dev.lectern.diff.model.PacketIdsShifted;
+import tlm.dev.lectern.diff.model.PacketPhaseAdded;
+import tlm.dev.lectern.diff.model.PacketPhaseRemoved;
 import tlm.dev.lectern.diff.model.RegistryAdded;
 import tlm.dev.lectern.diff.model.RegistryChange;
 import tlm.dev.lectern.diff.model.RegistryEntryAdded;
@@ -39,6 +49,7 @@ class VersionDiffServiceTest {
 
     private static final String REGISTRIES = "reports/registries.json";
     private static final String BLOCKS = "reports/blocks.json";
+    private static final String PACKETS = "reports/packets.json";
 
     private final VersionDiffService service = Composition.diffService();
 
@@ -47,16 +58,18 @@ class VersionDiffServiceTest {
     }
 
     private static VersionTree before() {
-        return tree("1.0", Map.of(REGISTRIES, GadgetScenario.BEFORE, BLOCKS, GadgetScenario.BLOCKS_BEFORE));
+        return tree("1.0", Map.of(REGISTRIES, GadgetScenario.BEFORE, BLOCKS, GadgetScenario.BLOCKS_BEFORE,
+                PACKETS, GadgetScenario.PACKETS_BEFORE));
     }
 
     private static VersionTree after() {
-        return tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, GadgetScenario.BLOCKS_AFTER));
+        return tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, GadgetScenario.BLOCKS_AFTER,
+                PACKETS, GadgetScenario.PACKETS_AFTER));
     }
 
     private static VersionTree without(VersionTree complete, String report) {
         Map<String, String> files = new HashMap<>();
-        for (String file : List.of(REGISTRIES, BLOCKS)) {
+        for (String file : List.of(REGISTRIES, BLOCKS, PACKETS)) {
             if (!file.equals(report)) {
                 files.put(file, complete.readText(file).orElseThrow());
             }
@@ -81,7 +94,13 @@ class VersionDiffServiceTest {
                         new RegistryAdded(key("demo:widget"), id(1), 1),
                         new BlockStateIdsShifted(3, 2, stateId(0)),
                         new BlockAdded(blockKey("demo:anvil"), 1),
-                        new BlockPropertyAdded(blockKey("demo:lamp"), property("dim"), values("low", "high"), value("low"))),
+                        new BlockPropertyAdded(blockKey("demo:lamp"), property("dim"), values("low", "high"), value("low")),
+                        new PacketPhaseAdded(phase("login"), 1),
+                        new PacketAdded(phase("play"), direction("clientbound"), packet("demo:flash"), id(1)),
+                        new PacketIdModified(phase("play"), direction("serverbound"), packet("demo:chat"), id(0), id(1)),
+                        new PacketIdModified(phase("play"), direction("serverbound"), packet("demo:jump"), id(1), id(0)),
+                        new PacketIdsShifted(phase("play"), direction("clientbound"), 2, id(1)),
+                        new PacketPhaseRemoved(phase("status"), 1)),
                 changeSet.changes());
     }
 
@@ -93,25 +112,31 @@ class VersionDiffServiceTest {
     }
 
     @Test
-    void theChangesOfBothDomainsAreInTheOrderOfTheSchema() {
-        List<Boolean> registryFlags = service.diff(before(), after()).changes().stream()
-                .map(change -> change instanceof RegistryChange).toList();
-        assertEquals(List.of(true, true, true, true, false, false, false), registryFlags);
+    void theChangesOfTheDomainsAreInTheOrderOfTheSchema() {
+        List<String> domains = service.diff(before(), after()).changes().stream()
+                .map(change -> switch (change) {
+                    case RegistryChange _ -> "registries";
+                    case BlockChange _ -> "blocks";
+                    case PacketChange _ -> "packets";
+                })
+                .distinct()
+                .toList();
+        assertEquals(List.of("registries", "blocks", "packets"), domains);
     }
 
     @Test
     void aReportMissingFromTheFirstVersionSkipsThatDomainAndKeepsTheOthers() {
         ChangeSet changeSet = service.diff(without(before(), BLOCKS), after());
         assertEquals(List.of(skipped(ChangeDomain.BLOCKS, SkipSide.FROM)), changeSet.skipped());
-        assertEquals(4, changeSet.changes().size());
-        assertTrue(changeSet.changes().stream().allMatch(change -> change instanceof RegistryChange));
+        assertEquals(10, changeSet.changes().size());
+        assertTrue(changeSet.changes().stream().noneMatch(change -> change instanceof BlockChange));
     }
 
     @Test
     void aReportMissingFromTheSecondVersionSkipsThatDomainAndKeepsTheOthers() {
         ChangeSet changeSet = service.diff(before(), without(after(), REGISTRIES));
         assertEquals(List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.TO)), changeSet.skipped());
-        assertEquals(3, changeSet.changes().size());
+        assertEquals(9, changeSet.changes().size());
         assertTrue(changeSet.changes().stream().noneMatch(change -> change instanceof RegistryChange));
     }
 
@@ -119,14 +144,24 @@ class VersionDiffServiceTest {
     void aReportMissingFromBothVersionsIsSkippedWithTheSideBoth() {
         ChangeSet changeSet = service.diff(without(before(), BLOCKS), without(after(), BLOCKS));
         assertEquals(List.of(skipped(ChangeDomain.BLOCKS, SkipSide.BOTH)), changeSet.skipped());
-        assertEquals(4, changeSet.changes().size());
+        assertEquals(10, changeSet.changes().size());
+    }
+
+    @Test
+    void aPacketReportThatDoesNotExistYetSkipsThePacketsDomainOnTheSideThatLacksIt() {
+        ChangeSet changeSet = service.diff(without(before(), PACKETS), after());
+        assertEquals(List.of(skipped(ChangeDomain.PACKETS, SkipSide.FROM)), changeSet.skipped());
+        assertTrue(changeSet.changes().stream().noneMatch(change -> change instanceof PacketChange));
+        ChangeSet both = service.diff(without(before(), PACKETS), without(after(), PACKETS));
+        assertEquals(List.of(skipped(ChangeDomain.PACKETS, SkipSide.BOTH)), both.skipped());
     }
 
     @Test
     void aVersionWithoutAnyReportSkipsEveryDomainInTheOrderOfTheSchema() {
         ChangeSet changeSet = service.diff(tree("1.0", Map.of()), tree("1.1", Map.of()));
         assertEquals(
-                List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.BOTH), skipped(ChangeDomain.BLOCKS, SkipSide.BOTH)),
+                List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.BOTH), skipped(ChangeDomain.BLOCKS, SkipSide.BOTH),
+                        skipped(ChangeDomain.PACKETS, SkipSide.BOTH)),
                 changeSet.skipped());
         assertEquals(List.of(), changeSet.changes());
     }
@@ -134,23 +169,35 @@ class VersionDiffServiceTest {
     @Test
     void aMissingReportIsNeverReadAsEverythingAddedOrRemoved() {
         ChangeSet changeSet = service.diff(tree("1.0", Map.of()), after());
-        assertEquals(List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.FROM), skipped(ChangeDomain.BLOCKS, SkipSide.FROM)),
+        assertEquals(
+                List.of(skipped(ChangeDomain.REGISTRIES, SkipSide.FROM), skipped(ChangeDomain.BLOCKS, SkipSide.FROM),
+                        skipped(ChangeDomain.PACKETS, SkipSide.FROM)),
                 changeSet.skipped());
         assertEquals(List.of(), changeSet.changes());
     }
 
     @Test
     void anIllegibleRegistriesReportStopsTheDiffAndNamesThatVersion() {
-        VersionTree broken = tree("1.1", Map.of(REGISTRIES, "{\"demo:gadget\": []}", BLOCKS, GadgetScenario.BLOCKS_AFTER));
+        VersionTree broken = tree("1.1", Map.of(REGISTRIES, "{\"demo:gadget\": []}", BLOCKS, GadgetScenario.BLOCKS_AFTER,
+                PACKETS, GadgetScenario.PACKETS_AFTER));
         VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
         assertEquals("Version 1.1, reports/registries.json: registry demo:gadget is not an object", failure.getMessage());
     }
 
     @Test
     void anIllegibleBlocksReportStopsTheDiffAndNamesThatVersion() {
-        VersionTree broken = tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, "{\"demo:crate\": []}"));
+        VersionTree broken = tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, "{\"demo:crate\": []}",
+                PACKETS, GadgetScenario.PACKETS_AFTER));
         VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
         assertEquals("Version 1.1, reports/blocks.json: block demo:crate is not an object", failure.getMessage());
+    }
+
+    @Test
+    void anIllegiblePacketsReportStopsTheDiffAndNamesThatVersion() {
+        VersionTree broken = tree("1.1", Map.of(REGISTRIES, GadgetScenario.AFTER, BLOCKS, GadgetScenario.BLOCKS_AFTER,
+                PACKETS, "{\"play\": []}"));
+        VersionReadException failure = assertThrows(VersionReadException.class, () -> service.diff(before(), broken));
+        assertEquals("Version 1.1, reports/packets.json: phase play is not an object", failure.getMessage());
     }
 
     @Test

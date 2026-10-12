@@ -82,6 +82,37 @@ public final class GadgetScenario {
             }
             """;
 
+    public static final String PACKETS_BEFORE = """
+            {
+              "handshake": {"serverbound": {"demo:hello": {"protocol_id": 0}}},
+              "play": {
+                "clientbound": {
+                  "demo:ping": {"protocol_id": 0},
+                  "demo:pong": {"protocol_id": 1},
+                  "demo:move": {"protocol_id": 2}
+                },
+                "serverbound": {"demo:chat": {"protocol_id": 0}, "demo:jump": {"protocol_id": 1}}
+              },
+              "status": {"clientbound": {"demo:state": {"protocol_id": 0}}}
+            }
+            """;
+
+    public static final String PACKETS_AFTER = """
+            {
+              "handshake": {"serverbound": {"demo:hello": {"protocol_id": 0}}},
+              "play": {
+                "clientbound": {
+                  "demo:ping": {"protocol_id": 0},
+                  "demo:flash": {"protocol_id": 1},
+                  "demo:pong": {"protocol_id": 2},
+                  "demo:move": {"protocol_id": 3}
+                },
+                "serverbound": {"demo:jump": {"protocol_id": 0}, "demo:chat": {"protocol_id": 1}}
+              },
+              "login": {"clientbound": {"demo:welcome": {"protocol_id": 0}}}
+            }
+            """;
+
     public static final String EXPECTED_JSON = """
             {
               "changes": [
@@ -129,6 +160,46 @@ public final class GadgetScenario {
                     "low",
                     "high"
                   ]
+                },
+                {
+                  "packet_count": 1,
+                  "phase": "login",
+                  "type": "packet.phase_added"
+                },
+                {
+                  "direction": "clientbound",
+                  "packet": "demo:flash",
+                  "phase": "play",
+                  "protocol_id": 1,
+                  "type": "packet.added"
+                },
+                {
+                  "direction": "serverbound",
+                  "new_id": 1,
+                  "old_id": 0,
+                  "packet": "demo:chat",
+                  "phase": "play",
+                  "type": "packet.id_modified"
+                },
+                {
+                  "direction": "serverbound",
+                  "new_id": 0,
+                  "old_id": 1,
+                  "packet": "demo:jump",
+                  "phase": "play",
+                  "type": "packet.id_modified"
+                },
+                {
+                  "count": 2,
+                  "direction": "clientbound",
+                  "first_id": 1,
+                  "phase": "play",
+                  "type": "packet.ids_shifted"
+                },
+                {
+                  "packet_count": 1,
+                  "phase": "status",
+                  "type": "packet.phase_removed"
                 }
               ],
               "from": {
