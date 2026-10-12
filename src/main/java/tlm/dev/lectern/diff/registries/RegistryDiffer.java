@@ -1,8 +1,10 @@
 package tlm.dev.lectern.diff.registries;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.model.EntryKey;
 import tlm.dev.lectern.diff.model.ProtocolId;
 import tlm.dev.lectern.diff.model.Registries;
@@ -50,10 +52,12 @@ public final class RegistryDiffer {
                 changes.add(new RegistryAdded(registry.key(), registry.id(), registry.entries().size()));
             }
         }
-        IdShiftClassifier.Result<RegistryKey> ids = classifier.classify(from.ids(), to.ids());
-        ids.firstShiftedId().ifPresent(first -> changes.add(new RegistryIdsShifted(ids.shiftedCount(), first)));
+        IdShiftClassifier.Result<RegistryKey> ids = classifier.classify(values(from.ids()), values(to.ids()));
+        ids.firstShiftedId()
+                .ifPresent(first -> changes.add(new RegistryIdsShifted(ids.shiftedCount(), new ProtocolId(first))));
         for (IdShiftClassifier.Modification<RegistryKey> modification : ids.modified()) {
-            changes.add(new RegistryIdModified(modification.key(), modification.oldId(), modification.newId()));
+            changes.add(new RegistryIdModified(
+                    modification.key(), new ProtocolId(modification.oldId()), new ProtocolId(modification.newId())));
         }
     }
 
@@ -72,12 +76,19 @@ public final class RegistryDiffer {
                 changes.add(new RegistryEntryRemoved(registry, entry.getKey(), entry.getValue()));
             }
         }
-        IdShiftClassifier.Result<EntryKey> ids = classifier.classify(before.entries(), after.entries());
-        ids.firstShiftedId()
-                .ifPresent(first -> changes.add(new RegistryEntryIdsShifted(registry, ids.shiftedCount(), first)));
+        IdShiftClassifier.Result<EntryKey> ids =
+                classifier.classify(values(before.entries()), values(after.entries()));
+        ids.firstShiftedId().ifPresent(first -> changes.add(
+                new RegistryEntryIdsShifted(registry, ids.shiftedCount(), new ProtocolId(first))));
         for (IdShiftClassifier.Modification<EntryKey> modification : ids.modified()) {
-            changes.add(new RegistryEntryIdModified(
-                    registry, modification.key(), modification.oldId(), modification.newId()));
+            changes.add(new RegistryEntryIdModified(registry, modification.key(),
+                    new ProtocolId(modification.oldId()), new ProtocolId(modification.newId())));
         }
+    }
+
+    private static <K> Map<K, Integer> values(Map<K, ProtocolId> ids) {
+        Map<K, Integer> values = new HashMap<>();
+        ids.forEach((key, id) -> values.put(key, id.value()));
+        return values;
     }
 }

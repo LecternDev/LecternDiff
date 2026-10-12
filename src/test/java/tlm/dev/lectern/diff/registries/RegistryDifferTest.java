@@ -11,6 +11,7 @@ import static tlm.dev.lectern.diff.fixtures.VersionFixtures.release;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.model.Change;
 import tlm.dev.lectern.diff.model.ChangeSet;
 import tlm.dev.lectern.diff.model.Registries;

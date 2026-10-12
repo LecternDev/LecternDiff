@@ -10,21 +10,22 @@ import org.junit.jupiter.api.Test;
 class SeamRulesTest {
 
     private static final List<String> FAMILIES = List.of(
-            "model", "json", "read", "write", "registries", "blocks", "commands", "packets", "recipes", "loottables",
+            "model", "json", "ids", "read", "write", "registries", "blocks", "commands", "packets", "recipes", "loottables",
             "worldgen");
 
     private static final Map<String, Set<String>> ALLOWED = Map.ofEntries(
             Map.entry("model", Set.of()),
             Map.entry("json", Set.of()),
+            Map.entry("ids", Set.of()),
             Map.entry("read", Set.of("model", "json")),
             Map.entry("write", Set.of("model", "json")),
-            Map.entry("registries", Set.of("model")),
-            Map.entry("blocks", Set.of("model")),
-            Map.entry("commands", Set.of("model")),
-            Map.entry("packets", Set.of("model")),
-            Map.entry("recipes", Set.of("model")),
-            Map.entry("loottables", Set.of("model")),
-            Map.entry("worldgen", Set.of("model")));
+            Map.entry("registries", Set.of("model", "ids")),
+            Map.entry("blocks", Set.of("model", "ids")),
+            Map.entry("commands", Set.of("model", "ids")),
+            Map.entry("packets", Set.of("model", "ids")),
+            Map.entry("recipes", Set.of("model", "ids")),
+            Map.entry("loottables", Set.of("model", "ids")),
+            Map.entry("worldgen", Set.of("model", "ids")));
 
     private static String importing(String... imports) {
         StringBuilder source = new StringBuilder("package tlm.dev.lectern.diff.x;\n\n");

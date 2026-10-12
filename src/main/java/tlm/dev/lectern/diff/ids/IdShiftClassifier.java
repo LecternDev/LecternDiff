@@ -1,57 +1,61 @@
-package tlm.dev.lectern.diff.registries;
+package tlm.dev.lectern.diff.ids;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TreeSet;
-import tlm.dev.lectern.diff.model.ProtocolId;
 
 public final class IdShiftClassifier {
 
-    public record Modification<K>(K key, ProtocolId oldId, ProtocolId newId) {
+    public record Modification<K>(K key, int oldId, int newId) {
     }
 
-    public record Result<K>(int shiftedCount, Optional<ProtocolId> firstShiftedId, List<Modification<K>> modified) {
+    public record Result<K>(List<K> shifted, OptionalInt firstShiftedId, List<Modification<K>> modified) {
 
         public Result {
+            shifted = List.copyOf(shifted);
             modified = List.copyOf(modified);
+        }
+
+        public int shiftedCount() {
+            return shifted.size();
         }
     }
 
-    public <K extends Comparable<K>> Result<K> classify(Map<K, ProtocolId> from, Map<K, ProtocolId> to) {
+    public <K extends Comparable<K>> Result<K> classify(Map<K, Integer> from, Map<K, Integer> to) {
         int[] addedIds = sortedIds(to, from.keySet());
         int[] removedIds = sortedIds(from, to.keySet());
-        int shifted = 0;
+        List<K> shifted = new ArrayList<>();
         int firstShifted = Integer.MAX_VALUE;
         List<Modification<K>> modified = new ArrayList<>();
         for (K key : new TreeSet<>(from.keySet())) {
-            ProtocolId newId = to.get(key);
+            Integer newId = to.get(key);
             if (newId == null) {
                 continue;
             }
-            ProtocolId oldId = from.get(key);
-            if (oldId.equals(newId)) {
+            int oldId = from.get(key);
+            if (oldId == newId) {
                 continue;
             }
-            int expected = countBelow(addedIds, newId.value()) - countBelow(removedIds, oldId.value());
-            if (newId.value() - oldId.value() == expected) {
-                shifted++;
-                firstShifted = Math.min(firstShifted, oldId.value());
+            int expected = countBelow(addedIds, newId) - countBelow(removedIds, oldId);
+            if (newId - oldId == expected) {
+                shifted.add(key);
+                firstShifted = Math.min(firstShifted, oldId);
             } else {
                 modified.add(new Modification<>(key, oldId, newId));
             }
         }
-        Optional<ProtocolId> first = shifted == 0 ? Optional.empty() : Optional.of(new ProtocolId(firstShifted));
+        OptionalInt first = shifted.isEmpty() ? OptionalInt.empty() : OptionalInt.of(firstShifted);
         return new Result<>(shifted, first, modified);
     }
 
-    private static <K> int[] sortedIds(Map<K, ProtocolId> source, Set<K> excluded) {
+    private static <K> int[] sortedIds(Map<K, Integer> source, Set<K> excluded) {
         return source.entrySet().stream()
                 .filter(entry -> !excluded.contains(entry.getKey()))
-                .mapToInt(entry -> entry.getValue().value())
+                .mapToInt(Map.Entry::getValue)
                 .sorted()
                 .toArray();
     }

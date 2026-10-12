@@ -17,7 +17,7 @@ final class SeamRules {
     private static final List<String> QUALIFIED_PREFIXES = List.of(ROOT, "tools.jackson.");
     private static final Set<String> DOMAINS =
             Set.of("registries", "blocks", "commands", "packets", "recipes", "loottables", "worldgen");
-    private static final Set<String> FAMILIES = familiesWith(DOMAINS, "model", "json", "read", "write");
+    private static final Set<String> FAMILIES = familiesWith(DOMAINS, "model", "json", "ids", "read", "write");
     private static final Map<String, String> THIRD_PARTY_OWNERS = Map.of("tools.jackson.core", "json");
 
     private SeamRules() {
@@ -45,9 +45,9 @@ final class SeamRules {
 
     private static Set<String> allowedImports(String family) {
         return switch (family) {
-            case "model", "json" -> Set.of();
+            case "model", "json", "ids" -> Set.of();
             case "read", "write" -> Set.of("model", "json");
-            default -> Set.of("model");
+            default -> Set.of("model", "ids");
         };
     }
 

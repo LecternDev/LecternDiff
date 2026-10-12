@@ -21,7 +21,7 @@ import tlm.dev.lectern.diff.model.RegistryRemoved;
 import tlm.dev.lectern.diff.read.RegistryReportReader;
 import tlm.dev.lectern.diff.read.VersionReadException;
 import tlm.dev.lectern.diff.read.VersionTree;
-import tlm.dev.lectern.diff.registries.IdShiftClassifier;
+import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
 
 class VersionDiffServiceTest {

@@ -8,7 +8,7 @@ import tlm.dev.lectern.diff.read.DirectoryVersionTree;
 import tlm.dev.lectern.diff.read.RegistryReportReader;
 import tlm.dev.lectern.diff.read.VersionReadException;
 import tlm.dev.lectern.diff.read.VersionTree;
-import tlm.dev.lectern.diff.registries.IdShiftClassifier;
+import tlm.dev.lectern.diff.ids.IdShiftClassifier;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
 import tlm.dev.lectern.diff.write.ChangeSetWriter;
 import tlm.dev.lectern.diff.write.RegistryChangeRenderer;
