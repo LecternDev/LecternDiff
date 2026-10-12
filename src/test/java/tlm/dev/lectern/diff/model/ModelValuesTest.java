@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class ModelValuesTest {
@@ -48,6 +51,24 @@ class ModelValuesTest {
     void keysCompareByTheirText() {
         assertEquals(List.of(new EntryKey("demo:a"), new EntryKey("demo:b"), new EntryKey("demo:c")),
                 List.of(new EntryKey("demo:c"), new EntryKey("demo:a"), new EntryKey("demo:b")).stream().sorted().toList());
+    }
+
+    @Test
+    void aVersionKindIsReadBackFromItsLabelAndNothingElse() {
+        for (VersionKind kind : VersionKind.ALL) {
+            assertEquals(Optional.of(kind), VersionKind.ofLabel(kind.label()));
+        }
+        for (String unknown : List.of("", "Release", "nightly", "release ", "pre_release")) {
+            assertEquals(Optional.empty(), VersionKind.ofLabel(unknown), unknown);
+        }
+    }
+
+    @Test
+    void theListOfKindsHoldsEveryPermittedKind() {
+        assertEquals(
+                Set.of(VersionKind.class.getPermittedSubclasses()),
+                VersionKind.ALL.stream().<Class<?>>map(Object::getClass).collect(Collectors.toSet()));
+        assertEquals(VersionKind.ALL.size(), VersionKind.class.getPermittedSubclasses().length);
     }
 
     @Test

@@ -2,13 +2,12 @@ package tlm.dev.lectern.diff;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.entry;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.key;
+import static tlm.dev.lectern.diff.fixtures.WorkbenchFixtures.requireReport;
+import static tlm.dev.lectern.diff.fixtures.WorkbenchFixtures.tree;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,9 +29,7 @@ import tlm.dev.lectern.diff.model.RegistryEntryIdsShifted;
 import tlm.dev.lectern.diff.model.RegistryEntryRemoved;
 import tlm.dev.lectern.diff.model.RegistryRemoved;
 import tlm.dev.lectern.diff.model.VersionKind;
-import tlm.dev.lectern.diff.read.DirectoryVersionTree;
 import tlm.dev.lectern.diff.read.RegistryReportReader;
-import tlm.dev.lectern.diff.read.VersionKindReader;
 import tlm.dev.lectern.diff.read.VersionTree;
 import tlm.dev.lectern.diff.registries.IdShiftClassifier;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
@@ -41,7 +38,6 @@ import tlm.dev.lectern.diff.write.RegistryChangeRenderer;
 
 class WorkbenchDiffTest {
 
-    private static final Path GENERATED = Path.of("..", "LecternWorkbench", "generated");
     private static final String RELEASE = "26.3";
     private static final String SNAPSHOT = "26.4-snapshot-3";
 
@@ -50,22 +46,8 @@ class WorkbenchDiffTest {
     private final VersionDiffService service =
             new VersionDiffService(reader, new RegistryDiffer(new IdShiftClassifier()));
 
-    private static void requireWorkbench(String... versions) {
-        for (String version : versions) {
-            Path report = GENERATED.resolve(version).resolve(RegistryReportReader.FILE);
-            assumeTrue(Files.isRegularFile(report), "Workbench data missing: " + report.normalize()
-                    + ". Download the server jar of " + version + " (SHA-1 checked against the Mojang manifest), run the"
-                    + " official data generator with --server --reports into LecternWorkbench/generated/" + version
-                    + "/ as described in LecternPipeline/CLAUDE.md, section Constats.");
-        }
-    }
-
-    private static VersionTree tree(String version) {
-        return new DirectoryVersionTree(GENERATED.resolve(version), new VersionKindReader());
-    }
-
     private ChangeSet diff(String from, String to) {
-        requireWorkbench(from, to);
+        requireReport(RegistryReportReader.FILE, from, to);
         return service.diff(tree(from), tree(to));
     }
 
@@ -88,7 +70,7 @@ class WorkbenchDiffTest {
     void everyObservedGenerationOfTheReportIsReadable() {
         Map<String, Integer> expectedRegistryCounts = Map.of(
                 "1.14.4", 37, "1.20.4", 70, "1.21.11", 95, RELEASE, 95, SNAPSHOT, 95);
-        expectedRegistryCounts.keySet().forEach(WorkbenchDiffTest::requireWorkbench);
+        expectedRegistryCounts.keySet().forEach(version -> requireReport(RegistryReportReader.FILE, version));
         expectedRegistryCounts.forEach((version, count) -> {
             Registries registries = reader.read(tree(version));
             assertEquals(count, registries.byKey().size(), version);

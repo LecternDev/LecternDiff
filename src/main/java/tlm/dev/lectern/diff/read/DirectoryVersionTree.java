@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import tlm.dev.lectern.diff.model.VersionId;
 import tlm.dev.lectern.diff.model.VersionRef;
 
 public final class DirectoryVersionTree implements VersionTree {
@@ -13,23 +12,13 @@ public final class DirectoryVersionTree implements VersionTree {
     private final Path root;
     private final VersionRef version;
 
-    public DirectoryVersionTree(Path root, VersionKindReader kindReader) {
+    public DirectoryVersionTree(Path root, VersionRef version) {
         Path absolute = root.toAbsolutePath().normalize();
         if (!Files.isDirectory(absolute)) {
             throw new VersionReadException("Not a version folder: " + absolute);
         }
-        Path name = absolute.getFileName();
-        if (name == null) {
-            throw new VersionReadException("A version folder cannot be a filesystem root: " + absolute);
-        }
-        VersionId id;
-        try {
-            id = new VersionId(name.toString());
-        } catch (IllegalArgumentException e) {
-            throw new VersionReadException("Not a usable version folder name: " + absolute, e);
-        }
         this.root = absolute;
-        this.version = new VersionRef(id, kindReader.read(id));
+        this.version = version;
     }
 
     @Override
