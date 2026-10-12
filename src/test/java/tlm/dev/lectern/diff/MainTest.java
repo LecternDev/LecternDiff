@@ -14,6 +14,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tlm.dev.lectern.diff.fixtures.GadgetScenario;
+import tlm.dev.lectern.diff.fixtures.VersionFolders;
 
 class MainTest {
 
@@ -25,22 +26,15 @@ class MainTest {
 
     private Path versionFolder(String name, String registriesJson, String blocksJson, String packetsJson, String commandsJson)
             throws IOException {
-        Path reports = Files.createDirectories(workDirectory.resolve(name).resolve("reports"));
-        Files.writeString(reports.resolve("registries.json"), registriesJson, StandardCharsets.UTF_8);
-        Files.writeString(reports.resolve("blocks.json"), blocksJson, StandardCharsets.UTF_8);
-        Files.writeString(reports.resolve("packets.json"), packetsJson, StandardCharsets.UTF_8);
-        Files.writeString(reports.resolve("commands.json"), commandsJson, StandardCharsets.UTF_8);
-        return workDirectory.resolve(name);
+        return VersionFolders.write(workDirectory, name, registriesJson, blocksJson, packetsJson, commandsJson);
     }
 
     private Path before() throws IOException {
-        return versionFolder("before", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE, GadgetScenario.PACKETS_BEFORE,
-                GadgetScenario.COMMANDS_BEFORE);
+        return VersionFolders.before(workDirectory);
     }
 
     private Path after() throws IOException {
-        return versionFolder("after", GadgetScenario.AFTER, GadgetScenario.BLOCKS_AFTER, GadgetScenario.PACKETS_AFTER,
-                GadgetScenario.COMMANDS_AFTER);
+        return VersionFolders.after(workDirectory);
     }
 
     private static String[] diffArguments(Path from, Path to) {

@@ -34,6 +34,9 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+    doFirst {
+        systemProperty("lectern.diff.runtimeClasspath", sourceSets.main.get().runtimeClasspath.asPath)
+    }
     inputs.files(fileTree("src/main/java"), fileTree("src/test/java"))
         .withPropertyName("sourceRuleInputs")
         .withPathSensitivity(PathSensitivity.RELATIVE)
