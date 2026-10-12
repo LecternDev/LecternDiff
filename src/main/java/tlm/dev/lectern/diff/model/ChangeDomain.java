@@ -2,11 +2,12 @@ package tlm.dev.lectern.diff.model;
 
 import java.util.List;
 
-public sealed interface ChangeDomain permits ChangeDomain.RegistryDomain, ChangeDomain.BlockDomain {
+public sealed interface ChangeDomain permits ChangeDomain.RegistryDomain, ChangeDomain.BlockDomain, ChangeDomain.PacketDomain {
 
     ChangeDomain REGISTRIES = new RegistryDomain();
     ChangeDomain BLOCKS = new BlockDomain();
-    List<ChangeDomain> ALL = List.of(REGISTRIES, BLOCKS);
+    ChangeDomain PACKETS = new PacketDomain();
+    List<ChangeDomain> ALL = List.of(REGISTRIES, BLOCKS, PACKETS);
 
     String label();
 
@@ -35,6 +36,19 @@ public sealed interface ChangeDomain permits ChangeDomain.RegistryDomain, Change
         @Override
         public int rank() {
             return 1;
+        }
+    }
+
+    record PacketDomain() implements ChangeDomain {
+
+        @Override
+        public String label() {
+            return "packets";
+        }
+
+        @Override
+        public int rank() {
+            return 2;
         }
     }
 }

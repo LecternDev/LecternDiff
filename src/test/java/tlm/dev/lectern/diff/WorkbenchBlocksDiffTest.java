@@ -119,8 +119,7 @@ class WorkbenchBlocksDiffTest {
 
     @Test
     void theWrittenChangeSetIsCanonicalAndStable() {
-        ChangeSetWriter writer =
-                new ChangeSetWriter(new RegistryChangeRenderer(), new BlockChangeRenderer(), new CanonicalJsonWriter());
+        ChangeSetWriter writer = Composition.changeSetWriter();
         String first = writer.write(diff(RELEASE, SNAPSHOT));
         assertEquals(first, writer.write(diff(RELEASE, SNAPSHOT)));
         assertEquals(first, new CanonicalJsonWriter().write(json.read(first)));

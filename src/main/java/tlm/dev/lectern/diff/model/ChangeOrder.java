@@ -12,6 +12,8 @@ final class ChangeOrder {
 
     private static final int REGISTRIES = ChangeDomain.REGISTRIES.rank();
     private static final int BLOCKS = ChangeDomain.BLOCKS.rank();
+    private static final int PACKETS = ChangeDomain.PACKETS.rank();
+    private static final String SEPARATOR = "/";
 
     private record Key(int group, String subject, int rank, String detail) {
     }
@@ -42,6 +44,20 @@ final class ChangeOrder {
                     new Key(BLOCKS, removed.block().value(), 6, removed.property().value());
             case BlockDefaultStateModified modified -> new Key(BLOCKS, modified.block().value(), 7, "");
             case BlockStateIdsModified modified -> new Key(BLOCKS, modified.block().value(), 8, "");
+            case PacketPhaseAdded added -> new Key(PACKETS, added.phase().value(), 1, "");
+            case PacketPhaseRemoved removed -> new Key(PACKETS, removed.phase().value(), 2, "");
+            case PacketDirectionAdded added -> new Key(PACKETS, added.phase().value(), 3, added.direction().label());
+            case PacketDirectionRemoved removed -> new Key(PACKETS, removed.phase().value(), 4, removed.direction().label());
+            case PacketAdded added -> new Key(PACKETS, added.phase().value(), 5, packetDetail(added.direction(), added.packet()));
+            case PacketRemoved removed ->
+                    new Key(PACKETS, removed.phase().value(), 6, packetDetail(removed.direction(), removed.packet()));
+            case PacketIdModified modified ->
+                    new Key(PACKETS, modified.phase().value(), 7, packetDetail(modified.direction(), modified.packet()));
+            case PacketIdsShifted shifted -> new Key(PACKETS, shifted.phase().value(), 8, shifted.direction().label());
         };
+    }
+
+    private static String packetDetail(PacketDirection direction, PacketName packet) {
+        return direction.label() + SEPARATOR + packet.value();
     }
 }

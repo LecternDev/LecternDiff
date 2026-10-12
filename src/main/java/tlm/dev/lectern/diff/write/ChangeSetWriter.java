@@ -8,20 +8,18 @@ import tlm.dev.lectern.diff.json.JsonValue;
 import tlm.dev.lectern.diff.model.BlockChange;
 import tlm.dev.lectern.diff.model.Change;
 import tlm.dev.lectern.diff.model.ChangeSet;
+import tlm.dev.lectern.diff.model.PacketChange;
 import tlm.dev.lectern.diff.model.RegistryChange;
 import tlm.dev.lectern.diff.model.SkippedDomain;
 import tlm.dev.lectern.diff.model.VersionRef;
 
 public final class ChangeSetWriter {
 
-    private final RegistryChangeRenderer registryRenderer;
-    private final BlockChangeRenderer blockRenderer;
+    private final ChangeRenderers renderers;
     private final CanonicalJsonWriter json;
 
-    public ChangeSetWriter(
-            RegistryChangeRenderer registryRenderer, BlockChangeRenderer blockRenderer, CanonicalJsonWriter json) {
-        this.registryRenderer = registryRenderer;
-        this.blockRenderer = blockRenderer;
+    public ChangeSetWriter(ChangeRenderers renderers, CanonicalJsonWriter json) {
+        this.renderers = renderers;
         this.json = json;
     }
 
@@ -39,8 +37,9 @@ public final class ChangeSetWriter {
 
     private JsonObject render(Change change) {
         return switch (change) {
-            case RegistryChange registryChange -> registryRenderer.render(registryChange);
-            case BlockChange blockChange -> blockRenderer.render(blockChange);
+            case RegistryChange registryChange -> renderers.registries().render(registryChange);
+            case BlockChange blockChange -> renderers.blocks().render(blockChange);
+            case PacketChange packetChange -> renderers.packets().render(packetChange);
         };
     }
 

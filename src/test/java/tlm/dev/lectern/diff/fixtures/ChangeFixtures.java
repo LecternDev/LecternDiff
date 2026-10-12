@@ -6,6 +6,9 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.direction;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.packet;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.phase;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.entry;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.key;
@@ -22,6 +25,14 @@ import tlm.dev.lectern.diff.model.BlockRemoved;
 import tlm.dev.lectern.diff.model.BlockStateIdsModified;
 import tlm.dev.lectern.diff.model.BlockStateIdsShifted;
 import tlm.dev.lectern.diff.model.Change;
+import tlm.dev.lectern.diff.model.PacketAdded;
+import tlm.dev.lectern.diff.model.PacketDirectionAdded;
+import tlm.dev.lectern.diff.model.PacketDirectionRemoved;
+import tlm.dev.lectern.diff.model.PacketIdModified;
+import tlm.dev.lectern.diff.model.PacketIdsShifted;
+import tlm.dev.lectern.diff.model.PacketPhaseAdded;
+import tlm.dev.lectern.diff.model.PacketPhaseRemoved;
+import tlm.dev.lectern.diff.model.PacketRemoved;
 import tlm.dev.lectern.diff.model.RegistryAdded;
 import tlm.dev.lectern.diff.model.RegistryDefaultModified;
 import tlm.dev.lectern.diff.model.RegistryEntryAdded;
@@ -56,6 +67,14 @@ public final class ChangeFixtures {
                 new BlockPropertyValuesAdded(blockKey("demo:door"), property("half"), values("upper")),
                 new BlockPropertyValuesRemoved(blockKey("demo:door"), property("hinge"), values("middle")),
                 new BlockDefaultStateModified(blockKey("demo:lamp"), state("lit=false"), state("lit=true")),
-                new BlockStateIdsModified(blockKey("demo:lever"), 2, stateId(10), stateId(14)));
+                new BlockStateIdsModified(blockKey("demo:lever"), 2, stateId(10), stateId(14)),
+                new PacketPhaseAdded(phase("login"), 6),
+                new PacketPhaseRemoved(phase("status"), 4),
+                new PacketDirectionAdded(phase("configuration"), direction("serverbound"), 3),
+                new PacketDirectionRemoved(phase("handshake"), direction("clientbound"), 2),
+                new PacketAdded(phase("play"), direction("clientbound"), packet("demo:ping"), id(7)),
+                new PacketRemoved(phase("play"), direction("clientbound"), packet("demo:pong"), id(9)),
+                new PacketIdModified(phase("play"), direction("serverbound"), packet("demo:chat"), id(3), id(5)),
+                new PacketIdsShifted(phase("play"), direction("clientbound"), 12, id(4)));
     }
 }

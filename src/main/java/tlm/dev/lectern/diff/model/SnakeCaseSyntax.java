@@ -3,11 +3,11 @@ package tlm.dev.lectern.diff.model;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-final class PropertySyntax {
+final class SnakeCaseSyntax {
 
     private static final Pattern SHAPE = Pattern.compile("[a-z0-9_]+");
 
-    private PropertySyntax() {
+    private SnakeCaseSyntax() {
     }
 
     static String require(String value, String what) {

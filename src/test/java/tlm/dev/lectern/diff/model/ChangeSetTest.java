@@ -8,6 +8,9 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.direction;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.packet;
+import static tlm.dev.lectern.diff.fixtures.PacketFixtures.phase;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.entry;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.key;
@@ -45,7 +48,17 @@ class ChangeSetTest {
             new BlockPropertyValuesRemoved(blockKey("demo:anvil"), property("a"), values("y")),
             new BlockDefaultStateModified(blockKey("demo:anvil"), state("a=x"), state("a=y")),
             new BlockStateIdsModified(blockKey("demo:anvil"), 2, stateId(1), stateId(2)),
-            new BlockAdded(blockKey("demo:bell"), 3));
+            new BlockAdded(blockKey("demo:bell"), 3),
+            new PacketDirectionAdded(phase("configuration"), direction("serverbound"), 3),
+            new PacketDirectionRemoved(phase("configuration"), direction("clientbound"), 3),
+            new PacketPhaseAdded(phase("login"), 6),
+            new PacketPhaseRemoved(phase("login"), 6),
+            new PacketAdded(phase("play"), direction("clientbound"), packet("demo:a"), id(1)),
+            new PacketAdded(phase("play"), direction("serverbound"), packet("demo:a"), id(1)),
+            new PacketRemoved(phase("play"), direction("clientbound"), packet("demo:b"), id(2)),
+            new PacketIdModified(phase("play"), direction("clientbound"), packet("demo:c"), id(3), id(4)),
+            new PacketIdsShifted(phase("play"), direction("clientbound"), 12, id(4)),
+            new PacketIdsShifted(phase("play"), direction("serverbound"), 2, id(1)));
 
     @Test
     void changesAreSortedByDomainThenSubjectThenTypeThenDetail() {

@@ -3,7 +3,7 @@ package tlm.dev.lectern.diff.model;
 public record PropertyName(String value) implements Comparable<PropertyName> {
 
     public PropertyName {
-        PropertySyntax.require(value, "property name");
+        SnakeCaseSyntax.require(value, "property name");
     }
 
     @Override

@@ -182,7 +182,7 @@ class WorkbenchRegistriesDiffTest {
     @Test
     void theWrittenChangeSetIsCanonicalAndStable() {
         ChangeSet changeSet = diff(RELEASE, SNAPSHOT);
-        ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new BlockChangeRenderer(), new CanonicalJsonWriter());
+        ChangeSetWriter writer = Composition.changeSetWriter();
         String first = writer.write(changeSet);
         assertEquals(first, writer.write(diff(RELEASE, SNAPSHOT)));
         assertEquals(first, new CanonicalJsonWriter().write(json.read(first)));

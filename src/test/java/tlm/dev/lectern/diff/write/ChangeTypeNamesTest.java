@@ -37,7 +37,15 @@ class ChangeTypeNamesTest {
             "block.property_values_removed",
             "block.default_state_modified",
             "block.state_ids_shifted",
-            "block.state_ids_modified");
+            "block.state_ids_modified",
+            "packet.phase_added",
+            "packet.phase_removed",
+            "packet.direction_added",
+            "packet.direction_removed",
+            "packet.added",
+            "packet.removed",
+            "packet.id_modified",
+            "packet.ids_shifted");
 
     private static List<Class<?>> leaves(Class<?> type) {
         if (!type.isSealed()) {
@@ -55,7 +63,9 @@ class ChangeTypeNamesTest {
 
     @Test
     void everyTypeIsWrittenUnderItsOwnStableName() {
-        ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new BlockChangeRenderer(), new CanonicalJsonWriter());
+        ChangeSetWriter writer = new ChangeSetWriter(
+                new ChangeRenderers(new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer()),
+                new CanonicalJsonWriter());
         String written = writer.write(new ChangeSet(release("1.0"), release("1.1"), oneOfEachType()));
         JsonObject document = (JsonObject) new JsonReader().read(written);
         JsonArray changes = (JsonArray) document.member("changes").orElseThrow();

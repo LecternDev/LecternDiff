@@ -151,6 +151,57 @@ class ChangeSetWriterTest {
                   "old_first_id": 10,
                   "state_count": 2,
                   "type": "block.state_ids_modified"
+                },
+                {
+                  "direction": "serverbound",
+                  "packet_count": 3,
+                  "phase": "configuration",
+                  "type": "packet.direction_added"
+                },
+                {
+                  "direction": "clientbound",
+                  "packet_count": 2,
+                  "phase": "handshake",
+                  "type": "packet.direction_removed"
+                },
+                {
+                  "packet_count": 6,
+                  "phase": "login",
+                  "type": "packet.phase_added"
+                },
+                {
+                  "direction": "clientbound",
+                  "packet": "demo:ping",
+                  "phase": "play",
+                  "protocol_id": 7,
+                  "type": "packet.added"
+                },
+                {
+                  "direction": "clientbound",
+                  "packet": "demo:pong",
+                  "phase": "play",
+                  "protocol_id": 9,
+                  "type": "packet.removed"
+                },
+                {
+                  "direction": "serverbound",
+                  "new_id": 5,
+                  "old_id": 3,
+                  "packet": "demo:chat",
+                  "phase": "play",
+                  "type": "packet.id_modified"
+                },
+                {
+                  "count": 12,
+                  "direction": "clientbound",
+                  "first_id": 4,
+                  "phase": "play",
+                  "type": "packet.ids_shifted"
+                },
+                {
+                  "packet_count": 4,
+                  "phase": "status",
+                  "type": "packet.phase_removed"
                 }
               ],
               "from": {
@@ -166,7 +217,9 @@ class ChangeSetWriterTest {
             }
             """;
 
-    private final ChangeSetWriter writer = new ChangeSetWriter(new RegistryChangeRenderer(), new BlockChangeRenderer(), new CanonicalJsonWriter());
+    private final ChangeSetWriter writer = new ChangeSetWriter(
+                new ChangeRenderers(new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer()),
+                new CanonicalJsonWriter());
 
     private static ChangeSet oneOfEachTypeBetweenTwoVersions() {
         VersionRef to = new VersionRef(new VersionId("1.1-pre-1"), new VersionKind.PreRelease());
