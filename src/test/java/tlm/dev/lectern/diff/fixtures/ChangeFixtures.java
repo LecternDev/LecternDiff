@@ -11,6 +11,10 @@ import static tlm.dev.lectern.diff.fixtures.CommandFixtures.number;
 import static tlm.dev.lectern.diff.fixtures.CommandFixtures.path;
 import static tlm.dev.lectern.diff.fixtures.CommandFixtures.properties;
 import static tlm.dev.lectern.diff.fixtures.CommandFixtures.requires;
+import static tlm.dev.lectern.diff.fixtures.DataFixtures.json;
+import static tlm.dev.lectern.diff.fixtures.DataFixtures.lootTable;
+import static tlm.dev.lectern.diff.fixtures.DataFixtures.recipe;
+import static tlm.dev.lectern.diff.fixtures.DataFixtures.tag;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.direction;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.packet;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.phase;
@@ -21,6 +25,8 @@ import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.key;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import tlm.dev.lectern.diff.jsondiff.JsonPointer;
+import tlm.dev.lectern.diff.jsondiff.PlaceChange;
 import tlm.dev.lectern.diff.model.BlockAdded;
 import tlm.dev.lectern.diff.model.BlockDefaultStateModified;
 import tlm.dev.lectern.diff.model.BlockPropertyAdded;
@@ -40,6 +46,9 @@ import tlm.dev.lectern.diff.model.CommandPermissionsModified;
 import tlm.dev.lectern.diff.model.CommandPropertiesModified;
 import tlm.dev.lectern.diff.model.CommandRedirectModified;
 import tlm.dev.lectern.diff.model.CommandRemoved;
+import tlm.dev.lectern.diff.model.LootTableAdded;
+import tlm.dev.lectern.diff.model.LootTableModified;
+import tlm.dev.lectern.diff.model.LootTableRemoved;
 import tlm.dev.lectern.diff.model.NodeKind;
 import tlm.dev.lectern.diff.model.PacketAdded;
 import tlm.dev.lectern.diff.model.PacketDirectionAdded;
@@ -50,6 +59,9 @@ import tlm.dev.lectern.diff.model.PacketPhaseAdded;
 import tlm.dev.lectern.diff.model.PacketPhaseRemoved;
 import tlm.dev.lectern.diff.model.PacketRemoved;
 import tlm.dev.lectern.diff.model.ParserId;
+import tlm.dev.lectern.diff.model.RecipeAdded;
+import tlm.dev.lectern.diff.model.RecipeModified;
+import tlm.dev.lectern.diff.model.RecipeRemoved;
 import tlm.dev.lectern.diff.model.RegistryAdded;
 import tlm.dev.lectern.diff.model.RegistryDefaultModified;
 import tlm.dev.lectern.diff.model.RegistryEntryAdded;
@@ -59,6 +71,11 @@ import tlm.dev.lectern.diff.model.RegistryEntryRemoved;
 import tlm.dev.lectern.diff.model.RegistryIdModified;
 import tlm.dev.lectern.diff.model.RegistryIdsShifted;
 import tlm.dev.lectern.diff.model.RegistryRemoved;
+import tlm.dev.lectern.diff.model.TagAdded;
+import tlm.dev.lectern.diff.model.TagRemoved;
+import tlm.dev.lectern.diff.model.TagReplaceModified;
+import tlm.dev.lectern.diff.model.TagValuesAdded;
+import tlm.dev.lectern.diff.model.TagValuesRemoved;
 
 public final class ChangeFixtures {
 
@@ -103,6 +120,20 @@ public final class ChangeFixtures {
                         Optional.of(properties(Map.of("min", number("0"), "max", number("3"))))),
                 new CommandExecutableModified(path("kill"), false, true),
                 new CommandPermissionsModified(path("op"), Optional.empty(), Optional.of(requires("admins"))),
-                new CommandRedirectModified(path("execute", "run"), Optional.of(path("execute")), Optional.empty()));
+                new CommandRedirectModified(path("execute", "run"), Optional.of(path("execute")), Optional.empty()),
+                new RecipeAdded(recipe("acorn_bread"), "demo:crafting_shaped", Optional.of("demo:acorn_bread")),
+                new RecipeRemoved(recipe("old_stew"), "demo:smelting", Optional.empty()),
+                new RecipeModified(recipe("gadget"),
+                        List.of(new PlaceChange.Modified(JsonPointer.root().child("result").child("count"), json("1"), json("2")))),
+                new LootTableAdded(lootTable("chests/vault"), Optional.of("demo:chest")),
+                new LootTableRemoved(lootTable("blocks/crate"), Optional.empty()),
+                new LootTableModified(lootTable("entities/golem"),
+                        List.of(new PlaceChange.Added(JsonPointer.root().child("pools").child(1), json("{\"rolls\": 1}")),
+                                new PlaceChange.Removed(JsonPointer.root().child("random_sequence"), json("\"demo:golem\"")))),
+                new TagAdded(tag("block", "mineable/spade"), 3),
+                new TagRemoved(tag("item", "old_tools"), 2),
+                new TagValuesAdded(tag("block", "logs"), List.of("demo:birch_log", "demo:oak_log")),
+                new TagValuesRemoved(tag("worldgen/biome", "is_cold"), List.of("#demo:frozen")),
+                new TagReplaceModified(tag("fluid", "water"), false, true));
     }
 }

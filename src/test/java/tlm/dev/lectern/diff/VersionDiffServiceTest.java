@@ -43,13 +43,16 @@ import tlm.dev.lectern.diff.model.CommandPropertiesModified;
 import tlm.dev.lectern.diff.model.CommandRemoved;
 import tlm.dev.lectern.diff.model.NodeKind;
 import tlm.dev.lectern.diff.model.PacketAdded;
+import tlm.dev.lectern.diff.model.LootTableChange;
 import tlm.dev.lectern.diff.model.PacketChange;
+import tlm.dev.lectern.diff.model.RecipeChange;
 import tlm.dev.lectern.diff.model.PacketIdModified;
 import tlm.dev.lectern.diff.model.PacketIdsShifted;
 import tlm.dev.lectern.diff.model.PacketPhaseAdded;
 import tlm.dev.lectern.diff.model.PacketPhaseRemoved;
 import tlm.dev.lectern.diff.model.RegistryAdded;
 import tlm.dev.lectern.diff.model.RegistryChange;
+import tlm.dev.lectern.diff.model.TagChange;
 import tlm.dev.lectern.diff.model.RegistryEntryAdded;
 import tlm.dev.lectern.diff.model.RegistryEntryIdsShifted;
 import tlm.dev.lectern.diff.model.RegistryRemoved;
@@ -142,6 +145,9 @@ class VersionDiffServiceTest {
                     case BlockChange _ -> "blocks";
                     case PacketChange _ -> "packets";
                     case CommandChange _ -> "commands";
+                    case RecipeChange _ -> "recipes";
+                    case LootTableChange _ -> "loot_tables";
+                    case TagChange _ -> "tags";
                 })
                 .distinct()
                 .toList();

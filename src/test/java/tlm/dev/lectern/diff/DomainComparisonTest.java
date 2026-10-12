@@ -7,7 +7,6 @@ import static tlm.dev.lectern.diff.fixtures.VersionFixtures.release;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tlm.dev.lectern.diff.fixtures.InMemoryVersionTree;
 import tlm.dev.lectern.diff.model.BlockAdded;
@@ -41,41 +40,41 @@ class DomainComparisonTest {
         return new InMemoryVersionTree(release(id), Map.of());
     }
 
-    private static Optional<SkippedDomain> skipped(SkipSide side) {
-        return Optional.of(new SkippedDomain(ChangeDomain.BLOCKS, side, new SkipReason.ReportMissing()));
+    private static List<SkippedDomain> skipped(SkipSide side) {
+        return List.of(new SkippedDomain(ChangeDomain.BLOCKS, side, new SkipReason.ReportMissing()));
     }
 
     @Test
     void bothReportsPresentGiveTheChangesAndNothingSkipped() {
-        DomainComparison.Outcome outcome = comparison.compare(with("1.0", "a"), with("1.1", "b"));
+        VersionComparison.Outcome outcome = comparison.compare(with("1.0", "a"), with("1.1", "b"));
         assertEquals(List.of(CHANGE), outcome.changes());
-        assertEquals(Optional.empty(), outcome.skipped());
+        assertEquals(List.of(), outcome.skipped());
     }
 
     @Test
     void bothReportsPresentAndEqualGiveNoChangeAndNothingSkipped() {
-        DomainComparison.Outcome outcome = comparison.compare(with("1.0", "a"), with("1.1", "a"));
+        VersionComparison.Outcome outcome = comparison.compare(with("1.0", "a"), with("1.1", "a"));
         assertEquals(List.of(), outcome.changes());
-        assertEquals(Optional.empty(), outcome.skipped());
+        assertEquals(List.of(), outcome.skipped());
     }
 
     @Test
     void aReportMissingFromTheFirstVersionSkipsTheDomainOnTheFromSide() {
-        DomainComparison.Outcome outcome = comparison.compare(without("1.0"), with("1.1", "b"));
+        VersionComparison.Outcome outcome = comparison.compare(without("1.0"), with("1.1", "b"));
         assertEquals(List.of(), outcome.changes());
         assertEquals(skipped(SkipSide.FROM), outcome.skipped());
     }
 
     @Test
     void aReportMissingFromTheSecondVersionSkipsTheDomainOnTheToSide() {
-        DomainComparison.Outcome outcome = comparison.compare(with("1.0", "a"), without("1.1"));
+        VersionComparison.Outcome outcome = comparison.compare(with("1.0", "a"), without("1.1"));
         assertEquals(List.of(), outcome.changes());
         assertEquals(skipped(SkipSide.TO), outcome.skipped());
     }
 
     @Test
     void aReportMissingFromBothVersionsSkipsTheDomainOnBothSides() {
-        DomainComparison.Outcome outcome = comparison.compare(without("1.0"), without("1.1"));
+        VersionComparison.Outcome outcome = comparison.compare(without("1.0"), without("1.1"));
         assertEquals(List.of(), outcome.changes());
         assertEquals(skipped(SkipSide.BOTH), outcome.skipped());
     }

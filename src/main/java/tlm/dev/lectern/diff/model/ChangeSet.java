@@ -6,20 +6,34 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public record ChangeSet(VersionRef from, VersionRef to, List<SkippedDomain> skipped, List<Change> changes) {
+public record ChangeSet(VersionRef from, VersionRef to, List<Skipped> skipped, List<Change> changes) {
 
     public static final int SCHEMA_VERSION = 1;
+
+    private static final Comparator<Skipped> SKIPPED_ORDER = Comparator
+            .comparingInt((Skipped skipped) -> switch (skipped) {
+                case SkippedDomain domain -> domain.domain().rank();
+                case SkippedFolder _ -> Integer.MAX_VALUE;
+            })
+            .thenComparing(skipped -> switch (skipped) {
+                case SkippedDomain _ -> "";
+                case SkippedFolder folder -> folder.folder();
+            });
 
     public ChangeSet {
         Objects.requireNonNull(from, "from");
         Objects.requireNonNull(to, "to");
-        Set<ChangeDomain> seen = new HashSet<>();
-        for (SkippedDomain domain : skipped) {
-            if (!seen.add(domain.domain())) {
-                throw new IllegalArgumentException("Domain " + domain.domain().label() + " is skipped twice");
+        Set<String> seen = new HashSet<>();
+        for (Skipped entry : skipped) {
+            String name = switch (entry) {
+                case SkippedDomain domain -> "domain " + domain.domain().label();
+                case SkippedFolder folder -> "folder " + folder.folder();
+            };
+            if (!seen.add(name)) {
+                throw new IllegalArgumentException("The " + name + " is skipped twice");
             }
         }
-        skipped = skipped.stream().sorted(Comparator.comparingInt(domain -> domain.domain().rank())).toList();
+        skipped = skipped.stream().sorted(SKIPPED_ORDER).toList();
         changes = changes.stream().sorted(ChangeOrder.COMPARATOR).toList();
     }
 

@@ -17,8 +17,12 @@ import tlm.dev.lectern.diff.write.BlockChangeRenderer;
 import tlm.dev.lectern.diff.write.ChangeRenderers;
 import tlm.dev.lectern.diff.write.ChangeSetWriter;
 import tlm.dev.lectern.diff.write.CommandChangeRenderer;
+import tlm.dev.lectern.diff.write.LootTableChangeRenderer;
 import tlm.dev.lectern.diff.write.PacketChangeRenderer;
+import tlm.dev.lectern.diff.write.PlaceChangeRenderer;
+import tlm.dev.lectern.diff.write.RecipeChangeRenderer;
 import tlm.dev.lectern.diff.write.RegistryChangeRenderer;
+import tlm.dev.lectern.diff.write.TagChangeRenderer;
 
 final class Composition {
 
@@ -44,10 +48,12 @@ final class Composition {
     }
 
     static ChangeSetWriter changeSetWriter() {
+        PlaceChangeRenderer placeRenderer = new PlaceChangeRenderer();
         return new ChangeSetWriter(
                 new ChangeRenderers(
                         new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer(),
-                        new CommandChangeRenderer()),
+                        new CommandChangeRenderer(), new RecipeChangeRenderer(placeRenderer),
+                        new LootTableChangeRenderer(placeRenderer), new TagChangeRenderer()),
                 new CanonicalJsonWriter());
     }
 }

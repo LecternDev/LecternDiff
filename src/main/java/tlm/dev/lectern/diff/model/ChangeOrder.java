@@ -15,6 +15,9 @@ final class ChangeOrder {
     private static final int BLOCKS = ChangeDomain.BLOCKS.rank();
     private static final int PACKETS = ChangeDomain.PACKETS.rank();
     private static final int COMMANDS = ChangeDomain.COMMANDS.rank();
+    private static final int RECIPES = ChangeDomain.RECIPES.rank();
+    private static final int LOOT_TABLES = ChangeDomain.LOOT_TABLES.rank();
+    private static final int TAGS = ChangeDomain.TAGS.rank();
     private static final String SEPARATOR = "/";
     private static final String PATH_SEPARATOR = String.valueOf((char) 0);
 
@@ -66,7 +69,22 @@ final class ChangeOrder {
             case CommandExecutableModified modified -> new Key(COMMANDS, pathSubject(modified.path()), 7, "");
             case CommandPermissionsModified modified -> new Key(COMMANDS, pathSubject(modified.path()), 8, "");
             case CommandRedirectModified modified -> new Key(COMMANDS, pathSubject(modified.path()), 9, "");
+            case RecipeAdded added -> new Key(RECIPES, added.recipe().id(), 1, "");
+            case RecipeRemoved removed -> new Key(RECIPES, removed.recipe().id(), 2, "");
+            case RecipeModified modified -> new Key(RECIPES, modified.recipe().id(), 3, "");
+            case LootTableAdded added -> new Key(LOOT_TABLES, added.lootTable().id(), 1, "");
+            case LootTableRemoved removed -> new Key(LOOT_TABLES, removed.lootTable().id(), 2, "");
+            case LootTableModified modified -> new Key(LOOT_TABLES, modified.lootTable().id(), 3, "");
+            case TagAdded added -> new Key(TAGS, tagSubject(added.tag()), 1, "");
+            case TagRemoved removed -> new Key(TAGS, tagSubject(removed.tag()), 2, "");
+            case TagValuesAdded added -> new Key(TAGS, tagSubject(added.tag()), 3, "");
+            case TagValuesRemoved removed -> new Key(TAGS, tagSubject(removed.tag()), 4, "");
+            case TagReplaceModified modified -> new Key(TAGS, tagSubject(modified.tag()), 5, "");
         };
+    }
+
+    private static String tagSubject(DataResource tag) {
+        return tag.registry() + PATH_SEPARATOR + tag.id();
     }
 
     private static String pathSubject(CommandPath path) {

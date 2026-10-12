@@ -1,4 +1,5 @@
 package tlm.dev.lectern.diff.model;
 
-public sealed interface Change permits RegistryChange, BlockChange, PacketChange, CommandChange {
+public sealed interface Change
+        permits RegistryChange, BlockChange, PacketChange, CommandChange, RecipeChange, LootTableChange, TagChange {
 }

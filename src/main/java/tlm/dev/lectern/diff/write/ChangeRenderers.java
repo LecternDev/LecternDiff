@@ -4,5 +4,8 @@ public record ChangeRenderers(
         RegistryChangeRenderer registries,
         BlockChangeRenderer blocks,
         PacketChangeRenderer packets,
-        CommandChangeRenderer commands) {
+        CommandChangeRenderer commands,
+        RecipeChangeRenderer recipes,
+        LootTableChangeRenderer lootTables,
+        TagChangeRenderer tags) {
 }

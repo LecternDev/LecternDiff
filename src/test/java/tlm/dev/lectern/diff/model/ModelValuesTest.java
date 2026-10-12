@@ -73,8 +73,8 @@ class ModelValuesTest {
 
     @Test
     void everyChangeDomainHasALabelAndARankInTheOrderOfTheSchema() {
-        assertEquals(List.of("registries", "blocks", "packets", "commands"), ChangeDomain.ALL.stream().map(ChangeDomain::label).toList());
-        assertEquals(List.of(0, 1, 2, 3), ChangeDomain.ALL.stream().map(ChangeDomain::rank).toList());
+        assertEquals(List.of("registries", "blocks", "packets", "commands", "recipes", "loot_tables", "tags"), ChangeDomain.ALL.stream().map(ChangeDomain::label).toList());
+        assertEquals(List.of(0, 1, 2, 3, 4, 5, 6), ChangeDomain.ALL.stream().map(ChangeDomain::rank).toList());
         assertEquals(
                 Set.of(ChangeDomain.class.getPermittedSubclasses()),
                 ChangeDomain.ALL.stream().<Class<?>>map(Object::getClass).collect(Collectors.toSet()));

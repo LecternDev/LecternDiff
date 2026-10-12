@@ -54,7 +54,18 @@ class ChangeTypeNamesTest {
             "command.properties_modified",
             "command.executable_modified",
             "command.permissions_modified",
-            "command.redirect_modified");
+            "command.redirect_modified",
+            "recipe.added",
+            "recipe.removed",
+            "recipe.modified",
+            "loot_table.added",
+            "loot_table.removed",
+            "loot_table.modified",
+            "tag.added",
+            "tag.removed",
+            "tag.values_added",
+            "tag.values_removed",
+            "tag.replace_modified");
 
     private static List<Class<?>> leaves(Class<?> type) {
         if (!type.isSealed()) {
@@ -74,7 +85,8 @@ class ChangeTypeNamesTest {
     void everyTypeIsWrittenUnderItsOwnStableName() {
         ChangeSetWriter writer = new ChangeSetWriter(
                 new ChangeRenderers(new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer(),
-                        new CommandChangeRenderer()),
+                        new CommandChangeRenderer(), new RecipeChangeRenderer(new PlaceChangeRenderer()),
+                        new LootTableChangeRenderer(new PlaceChangeRenderer()), new TagChangeRenderer()),
                 new CanonicalJsonWriter());
         String written = writer.write(new ChangeSet(release("1.0"), release("1.1"), oneOfEachType()));
         JsonObject document = (JsonObject) new JsonReader().read(written);

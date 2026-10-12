@@ -15,8 +15,11 @@ import tlm.dev.lectern.diff.model.Change;
 import tlm.dev.lectern.diff.model.ChangeDomain;
 import tlm.dev.lectern.diff.model.ChangeSet;
 import tlm.dev.lectern.diff.model.CommandChange;
+import tlm.dev.lectern.diff.model.LootTableChange;
 import tlm.dev.lectern.diff.model.PacketChange;
+import tlm.dev.lectern.diff.model.RecipeChange;
 import tlm.dev.lectern.diff.model.RegistryChange;
+import tlm.dev.lectern.diff.model.TagChange;
 import tlm.dev.lectern.diff.model.SkipReason;
 import tlm.dev.lectern.diff.model.SkipSide;
 import tlm.dev.lectern.diff.model.SkippedDomain;
@@ -42,6 +45,9 @@ class WorkbenchDiffServiceTest {
             case BlockChange _ -> "blocks";
             case PacketChange _ -> "packets";
             case CommandChange _ -> "commands";
+            case RecipeChange _ -> "recipes";
+            case LootTableChange _ -> "loot_tables";
+            case TagChange _ -> "tags";
         };
     }
 

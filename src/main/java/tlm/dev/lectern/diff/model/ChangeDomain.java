@@ -3,13 +3,16 @@ package tlm.dev.lectern.diff.model;
 import java.util.List;
 
 public sealed interface ChangeDomain permits ChangeDomain.RegistryDomain, ChangeDomain.BlockDomain, ChangeDomain.PacketDomain,
-        ChangeDomain.CommandDomain {
+        ChangeDomain.CommandDomain, ChangeDomain.RecipeDomain, ChangeDomain.LootTableDomain, ChangeDomain.TagDomain {
 
     ChangeDomain REGISTRIES = new RegistryDomain();
     ChangeDomain BLOCKS = new BlockDomain();
     ChangeDomain PACKETS = new PacketDomain();
     ChangeDomain COMMANDS = new CommandDomain();
-    List<ChangeDomain> ALL = List.of(REGISTRIES, BLOCKS, PACKETS, COMMANDS);
+    ChangeDomain RECIPES = new RecipeDomain();
+    ChangeDomain LOOT_TABLES = new LootTableDomain();
+    ChangeDomain TAGS = new TagDomain();
+    List<ChangeDomain> ALL = List.of(REGISTRIES, BLOCKS, PACKETS, COMMANDS, RECIPES, LOOT_TABLES, TAGS);
 
     String label();
 
@@ -64,6 +67,45 @@ public sealed interface ChangeDomain permits ChangeDomain.RegistryDomain, Change
         @Override
         public int rank() {
             return 3;
+        }
+    }
+
+    record RecipeDomain() implements ChangeDomain {
+
+        @Override
+        public String label() {
+            return "recipes";
+        }
+
+        @Override
+        public int rank() {
+            return 4;
+        }
+    }
+
+    record LootTableDomain() implements ChangeDomain {
+
+        @Override
+        public String label() {
+            return "loot_tables";
+        }
+
+        @Override
+        public int rank() {
+            return 5;
+        }
+    }
+
+    record TagDomain() implements ChangeDomain {
+
+        @Override
+        public String label() {
+            return "tags";
+        }
+
+        @Override
+        public int rank() {
+            return 6;
         }
     }
 }

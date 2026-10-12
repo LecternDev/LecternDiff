@@ -13,6 +13,10 @@ import static tlm.dev.lectern.diff.fixtures.CommandFixtures.number;
 import static tlm.dev.lectern.diff.fixtures.CommandFixtures.path;
 import static tlm.dev.lectern.diff.fixtures.CommandFixtures.properties;
 import static tlm.dev.lectern.diff.fixtures.CommandFixtures.requires;
+import static tlm.dev.lectern.diff.fixtures.DataFixtures.json;
+import static tlm.dev.lectern.diff.fixtures.DataFixtures.lootTable;
+import static tlm.dev.lectern.diff.fixtures.DataFixtures.recipe;
+import static tlm.dev.lectern.diff.fixtures.DataFixtures.tag;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.direction;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.packet;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.phase;
@@ -28,6 +32,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
+import tlm.dev.lectern.diff.jsondiff.JsonPointer;
+import tlm.dev.lectern.diff.jsondiff.PlaceChange;
 
 class ChangeSetTest {
 
@@ -75,7 +81,23 @@ class ChangeSetTest {
             new CommandPermissionsModified(path("alpha", "x"), Optional.empty(), Optional.of(requires("admins"))),
             new CommandRedirectModified(path("alpha", "x"), Optional.empty(), Optional.of(path("alpha"))),
             new CommandExecutableModified(path("alpha", "y"), true, false),
-            new CommandAdded(name("beta"), NodeKind.LITERAL, 1));
+            new CommandAdded(name("beta"), NodeKind.LITERAL, 1),
+            new RecipeAdded(recipe("alpha"), "demo:smelting", Optional.empty()),
+            new RecipeRemoved(recipe("alpha"), "demo:smelting", Optional.empty()),
+            new RecipeModified(recipe("alpha"), List.of(new PlaceChange.Added(JsonPointer.root().child("a"), json("1")))),
+            new RecipeAdded(recipe("beta"), "demo:smelting", Optional.of("demo:beta")),
+            new LootTableAdded(lootTable("alpha"), Optional.empty()),
+            new LootTableRemoved(lootTable("alpha"), Optional.empty()),
+            new LootTableModified(lootTable("alpha"), List.of(new PlaceChange.Removed(JsonPointer.root().child("a"), json("1")))),
+            new LootTableAdded(lootTable("beta"), Optional.of("demo:chest")),
+            new TagAdded(tag("block", "logs"), 1),
+            new TagRemoved(tag("block", "logs"), 1),
+            new TagValuesAdded(tag("block", "logs"), List.of("demo:a")),
+            new TagValuesRemoved(tag("block", "logs"), List.of("demo:b")),
+            new TagReplaceModified(tag("block", "logs"), false, true),
+            new TagAdded(tag("block", "stone"), 0),
+            new TagAdded(tag("item", "logs"), 0),
+            new TagAdded(tag("worldgen/biome", "cold"), 0));
 
     @Test
     void changesAreSortedByDomainThenSubjectThenTypeThenDetail() {
@@ -105,6 +127,23 @@ class ChangeSetTest {
         SkippedDomain registries = new SkippedDomain(ChangeDomain.REGISTRIES, SkipSide.BOTH, new SkipReason.ReportMissing());
         ChangeSet changeSet = new ChangeSet(release("1.0"), release("1.1"), List.of(blocks, registries), List.of());
         assertEquals(List.of(registries, blocks), changeSet.skipped());
+    }
+
+    @Test
+    void skippedFoldersComeAfterTheDomainsAndAreSortedByName() {
+        SkippedFolder worldgen = new SkippedFolder("worldgen", 49, 0, 80);
+        SkippedFolder advancement = new SkippedFolder("advancement", 0, 0, 4);
+        SkippedDomain commands = new SkippedDomain(ChangeDomain.COMMANDS, SkipSide.TO, new SkipReason.ReportMissing());
+        SkippedDomain tags = new SkippedDomain(ChangeDomain.TAGS, SkipSide.FROM, new SkipReason.ReportMissing());
+        ChangeSet changeSet = new ChangeSet(release("1.0"), release("1.1"), List.of(worldgen, tags, advancement, commands), List.of());
+        assertEquals(List.of(commands, tags, advancement, worldgen), changeSet.skipped());
+    }
+
+    @Test
+    void aFolderCannotBeSkippedTwiceButADomainAndAFolderMayShareAName() {
+        SkippedFolder first = new SkippedFolder("worldgen", 1, 0, 0);
+        SkippedFolder second = new SkippedFolder("worldgen", 0, 1, 0);
+        assertThrows(IllegalArgumentException.class, () -> new ChangeSet(release("1.0"), release("1.1"), List.of(first, second), List.of()));
     }
 
     @Test

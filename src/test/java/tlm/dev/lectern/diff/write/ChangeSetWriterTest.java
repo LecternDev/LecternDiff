@@ -20,6 +20,7 @@ import tlm.dev.lectern.diff.model.RegistryDefaultModified;
 import tlm.dev.lectern.diff.model.SkipReason;
 import tlm.dev.lectern.diff.model.SkipSide;
 import tlm.dev.lectern.diff.model.SkippedDomain;
+import tlm.dev.lectern.diff.model.SkippedFolder;
 import tlm.dev.lectern.diff.model.VersionId;
 import tlm.dev.lectern.diff.model.VersionKind;
 import tlm.dev.lectern.diff.model.VersionRef;
@@ -288,6 +289,94 @@ class ChangeSetWriterTest {
                     "rotationSteps"
                   ],
                   "type": "command.properties_modified"
+                },
+                {
+                  "recipe": "demo:acorn_bread",
+                  "recipe_type": "demo:crafting_shaped",
+                  "result": "demo:acorn_bread",
+                  "type": "recipe.added"
+                },
+                {
+                  "places": [
+                    {
+                      "new_value": 2,
+                      "old_value": 1,
+                      "operation": "modified",
+                      "pointer": "/result/count"
+                    }
+                  ],
+                  "recipe": "demo:gadget",
+                  "type": "recipe.modified"
+                },
+                {
+                  "recipe": "demo:old_stew",
+                  "recipe_type": "demo:smelting",
+                  "result": null,
+                  "type": "recipe.removed"
+                },
+                {
+                  "loot_table": "demo:blocks/crate",
+                  "table_type": null,
+                  "type": "loot_table.removed"
+                },
+                {
+                  "loot_table": "demo:chests/vault",
+                  "table_type": "demo:chest",
+                  "type": "loot_table.added"
+                },
+                {
+                  "loot_table": "demo:entities/golem",
+                  "places": [
+                    {
+                      "new_value": {
+                        "rolls": 1
+                      },
+                      "operation": "added",
+                      "pointer": "/pools/1"
+                    },
+                    {
+                      "old_value": "demo:golem",
+                      "operation": "removed",
+                      "pointer": "/random_sequence"
+                    }
+                  ],
+                  "type": "loot_table.modified"
+                },
+                {
+                  "registry": "block",
+                  "tag": "demo:logs",
+                  "type": "tag.values_added",
+                  "values": [
+                    "demo:birch_log",
+                    "demo:oak_log"
+                  ]
+                },
+                {
+                  "registry": "block",
+                  "tag": "demo:mineable/spade",
+                  "type": "tag.added",
+                  "value_count": 3
+                },
+                {
+                  "new_replace": true,
+                  "old_replace": false,
+                  "registry": "fluid",
+                  "tag": "demo:water",
+                  "type": "tag.replace_modified"
+                },
+                {
+                  "registry": "item",
+                  "tag": "demo:old_tools",
+                  "type": "tag.removed",
+                  "value_count": 2
+                },
+                {
+                  "registry": "worldgen/biome",
+                  "tag": "demo:is_cold",
+                  "type": "tag.values_removed",
+                  "values": [
+                    "#demo:frozen"
+                  ]
                 }
               ],
               "from": {
@@ -305,7 +394,8 @@ class ChangeSetWriterTest {
 
     private final ChangeSetWriter writer = new ChangeSetWriter(
                 new ChangeRenderers(new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer(),
-                        new CommandChangeRenderer()),
+                        new CommandChangeRenderer(), new RecipeChangeRenderer(new PlaceChangeRenderer()),
+                        new LootTableChangeRenderer(new PlaceChangeRenderer()), new TagChangeRenderer()),
                 new CanonicalJsonWriter());
 
     private static ChangeSet oneOfEachTypeBetweenTwoVersions() {
@@ -382,6 +472,49 @@ class ChangeSetWriterTest {
                       "domain": "blocks",
                       "reason": "report_missing",
                       "side": "from"
+                    }
+                  ],
+                  "to": {
+                    "id": "1.1",
+                    "kind": "release"
+                  }
+                }
+                """, writer.write(changeSet));
+    }
+
+    @Test
+    void skippedFoldersAreWrittenAfterTheDomainsWithTheirCounts() {
+        ChangeSet changeSet = new ChangeSet(release("1.0"), release("1.1"),
+                List.of(new SkippedFolder("worldgen", 0, 2, 80), new SkippedFolder("block_sound_set", 133, 0, 0),
+                        new SkippedDomain(ChangeDomain.REGISTRIES, SkipSide.BOTH, new SkipReason.ReportMissing())),
+                List.of());
+        assertEquals("""
+                {
+                  "changes": [],
+                  "from": {
+                    "id": "1.0",
+                    "kind": "release"
+                  },
+                  "schema_version": 1,
+                  "skipped": [
+                    {
+                      "domain": "registries",
+                      "reason": "report_missing",
+                      "side": "both"
+                    },
+                    {
+                      "added": 133,
+                      "folder": "block_sound_set",
+                      "modified": 0,
+                      "reason": "not_compared",
+                      "removed": 0
+                    },
+                    {
+                      "added": 0,
+                      "folder": "worldgen",
+                      "modified": 80,
+                      "reason": "not_compared",
+                      "removed": 2
                     }
                   ],
                   "to": {
