@@ -97,6 +97,7 @@ class ChangeSetWriterTest {
                 },
                 {
                   "block": "demo:crate",
+                  "default": "north",
                   "property": "facing",
                   "type": "block.property_added",
                   "values": [
@@ -106,6 +107,7 @@ class ChangeSetWriterTest {
                 },
                 {
                   "block": "demo:crate",
+                  "default": "true",
                   "property": "lit",
                   "type": "block.property_removed",
                   "values": [
@@ -132,8 +134,7 @@ class ChangeSetWriterTest {
                 {
                   "block": "demo:lamp",
                   "new_default": {
-                    "dim": "low",
-                    "lit": "false"
+                    "lit": "true"
                   },
                   "old_default": {
                     "lit": "false"

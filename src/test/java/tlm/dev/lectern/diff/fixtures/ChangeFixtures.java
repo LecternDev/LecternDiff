@@ -4,6 +4,7 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.blockKey;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.property;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.entry;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
@@ -50,11 +51,11 @@ public final class ChangeFixtures {
                 new BlockStateIdsShifted(5, 2, stateId(3)),
                 new BlockAdded(blockKey("demo:anvil"), 1),
                 new BlockRemoved(blockKey("demo:bell"), 4),
-                new BlockPropertyAdded(blockKey("demo:crate"), property("facing"), values("north", "south")),
-                new BlockPropertyRemoved(blockKey("demo:crate"), property("lit"), values("true", "false")),
+                new BlockPropertyAdded(blockKey("demo:crate"), property("facing"), values("north", "south"), value("north")),
+                new BlockPropertyRemoved(blockKey("demo:crate"), property("lit"), values("true", "false"), value("true")),
                 new BlockPropertyValuesAdded(blockKey("demo:door"), property("half"), values("upper")),
                 new BlockPropertyValuesRemoved(blockKey("demo:door"), property("hinge"), values("middle")),
-                new BlockDefaultStateModified(blockKey("demo:lamp"), state("lit=false"), state("dim=low,lit=false")),
+                new BlockDefaultStateModified(blockKey("demo:lamp"), state("lit=false"), state("lit=true")),
                 new BlockStateIdsModified(blockKey("demo:lever"), 2, stateId(10), stateId(14)));
     }
 }

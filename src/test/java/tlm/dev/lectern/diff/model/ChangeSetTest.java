@@ -6,6 +6,7 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.blockKey;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.property;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.entry;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
@@ -37,9 +38,9 @@ class ChangeSetTest {
             new BlockStateIdsShifted(4, 2, stateId(3)),
             new BlockAdded(blockKey("demo:anvil"), 1),
             new BlockRemoved(blockKey("demo:anvil"), 2),
-            new BlockPropertyAdded(blockKey("demo:anvil"), property("a"), values("x")),
-            new BlockPropertyAdded(blockKey("demo:anvil"), property("b"), values("x")),
-            new BlockPropertyRemoved(blockKey("demo:anvil"), property("a"), values("x")),
+            new BlockPropertyAdded(blockKey("demo:anvil"), property("a"), values("x"), value("x")),
+            new BlockPropertyAdded(blockKey("demo:anvil"), property("b"), values("x"), value("x")),
+            new BlockPropertyRemoved(blockKey("demo:anvil"), property("a"), values("x"), value("x")),
             new BlockPropertyValuesAdded(blockKey("demo:anvil"), property("a"), values("y")),
             new BlockPropertyValuesRemoved(blockKey("demo:anvil"), property("a"), values("y")),
             new BlockDefaultStateModified(blockKey("demo:anvil"), state("a=x"), state("a=y")),

@@ -122,23 +122,13 @@ public final class GadgetScenario {
                 },
                 {
                   "block": "demo:lamp",
+                  "default": "low",
                   "property": "dim",
                   "type": "block.property_added",
                   "values": [
                     "low",
                     "high"
                   ]
-                },
-                {
-                  "block": "demo:lamp",
-                  "new_default": {
-                    "dim": "low",
-                    "lit": "false"
-                  },
-                  "old_default": {
-                    "lit": "false"
-                  },
-                  "type": "block.default_state_modified"
                 }
               ],
               "from": {

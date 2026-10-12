@@ -9,6 +9,7 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.property;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.single;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
 import static tlm.dev.lectern.diff.fixtures.VersionFixtures.release;
 
@@ -60,7 +61,7 @@ class BlockDifferTest {
     }
 
     @Test
-    void aPropertyAddedToABlockIsReportedWithItsValuesAndChangesTheDefaultState() {
+    void aPropertyAddedToABlockIsReportedWithItsValuesAndItsDefaultValueAndNothingElse() {
         Blocks before = blocks(single("demo:lamp", 0, "lit", "true", "false"));
         Blocks after = blocks(block("demo:lamp")
                 .property("lit", "true", "false")
@@ -72,13 +73,12 @@ class BlockDifferTest {
                 .defaultState("dim=low,lit=true")
                 .build());
         assertEquals(
-                List.of(new BlockPropertyAdded(blockKey("demo:lamp"), property("dim"), values("low", "high")),
-                        new BlockDefaultStateModified(blockKey("demo:lamp"), state("lit=true"), state("dim=low,lit=true"))),
+                List.of(new BlockPropertyAdded(blockKey("demo:lamp"), property("dim"), values("low", "high"), value("low"))),
                 diff(before, after));
     }
 
     @Test
-    void aPropertyRemovedFromABlockIsReportedWithItsValuesAndChangesTheDefaultState() {
+    void aPropertyRemovedFromABlockIsReportedWithItsValuesAndItsOldDefaultValueAndNothingElse() {
         Blocks before = blocks(block("demo:lamp")
                 .property("lit", "true", "false")
                 .property("dim", "low", "high")
@@ -89,8 +89,7 @@ class BlockDifferTest {
                 .build());
         Blocks after = blocks(single("demo:lamp", 0, "lit", "true", "false"));
         assertEquals(
-                List.of(new BlockPropertyRemoved(blockKey("demo:lamp"), property("dim"), values("low", "high")),
-                        new BlockDefaultStateModified(blockKey("demo:lamp"), state("dim=low,lit=true"), state("lit=true"))),
+                List.of(new BlockPropertyRemoved(blockKey("demo:lamp"), property("dim"), values("low", "high"), value("low"))),
                 diff(before, after));
     }
 
@@ -136,6 +135,44 @@ class BlockDifferTest {
     }
 
     @Test
+    void theDefaultStateIsOnlyComparedOnThePropertiesBothVersionsHave() {
+        Blocks before = blocks(block("demo:lamp")
+                .property("lit", "true", "false")
+                .property("mode", "a", "b")
+                .state(0, "lit=true,mode=a")
+                .state(1, "lit=true,mode=b")
+                .state(2, "lit=false,mode=a")
+                .state(3, "lit=false,mode=b")
+                .defaultState("lit=true,mode=a")
+                .build());
+        Blocks after = blocks(block("demo:lamp")
+                .property("lit", "true", "false")
+                .property("dim", "low", "high")
+                .state(0, "dim=low,lit=true")
+                .state(1, "dim=low,lit=false")
+                .state(2, "dim=high,lit=true")
+                .state(3, "dim=high,lit=false")
+                .defaultState("dim=high,lit=false")
+                .build());
+        assertEquals(
+                List.of(new BlockPropertyAdded(blockKey("demo:lamp"), property("dim"), values("low", "high"), value("high")),
+                        new BlockPropertyRemoved(blockKey("demo:lamp"), property("mode"), values("a", "b"), value("a")),
+                        new BlockDefaultStateModified(blockKey("demo:lamp"), state("lit=true"), state("lit=false"))),
+                diff(before, after));
+    }
+
+    @Test
+    void aPropertyAddedWithTheSameDefaultOnTheCommonPropertiesDoesNotModifyTheDefaultState() {
+        Blocks before = blocks(block("demo:lamp").property("lit", "true", "false")
+                .state(0, "lit=true").state(1, "lit=false").defaultState("lit=false").build());
+        Blocks after = blocks(block("demo:lamp").property("lit", "true", "false").property("dim", "low")
+                .state(0, "dim=low,lit=true").state(1, "dim=low,lit=false").defaultState("dim=low,lit=false").build());
+        assertEquals(
+                List.of(new BlockPropertyAdded(blockKey("demo:lamp"), property("dim"), values("low"), value("low"))),
+                diff(before, after));
+    }
+
+    @Test
     void aBlockInsertedBeforeManyOthersShiftsThemAsOneAggregateNotOneChangePerBlock() {
         List<Block> beforeBlocks = new ArrayList<>();
         List<Block> afterBlocks = new ArrayList<>();
@@ -176,8 +213,7 @@ class BlockDifferTest {
         Blocks after = blocks(plain("demo:lamp", 0), plain("demo:crate", 1));
         assertEquals(
                 List.of(new BlockStateIdsShifted(1, 1, stateId(2)),
-                        new BlockPropertyRemoved(blockKey("demo:lamp"), property("lit"), values("true", "false")),
-                        new BlockDefaultStateModified(blockKey("demo:lamp"), state("lit=true"), state(""))),
+                        new BlockPropertyRemoved(blockKey("demo:lamp"), property("lit"), values("true", "false"), value("true"))),
                 diff(before, after));
     }
 

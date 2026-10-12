@@ -69,16 +69,28 @@ public final class BlockDiffer {
             List<PropertyValue> was = before.properties().get(name);
             List<PropertyValue> now = after.properties().get(name);
             if (was == null) {
-                changes.add(new BlockPropertyAdded(before.key(), name, now));
+                changes.add(new BlockPropertyAdded(before.key(), name, now, after.defaultState().values().get(name)));
             } else if (now == null) {
-                changes.add(new BlockPropertyRemoved(before.key(), name, was));
+                changes.add(new BlockPropertyRemoved(before.key(), name, was, before.defaultState().values().get(name)));
             } else {
                 diffValues(before.key(), name, was, now, changes);
             }
         }
-        if (!before.defaultState().equals(after.defaultState())) {
-            changes.add(new BlockDefaultStateModified(before.key(), before.defaultState(), after.defaultState()));
+        StateProperties oldDefault = restrictedTo(before.defaultState(), before, after);
+        StateProperties newDefault = restrictedTo(after.defaultState(), before, after);
+        if (!oldDefault.equals(newDefault)) {
+            changes.add(new BlockDefaultStateModified(before.key(), oldDefault, newDefault));
         }
+    }
+
+    private static StateProperties restrictedTo(StateProperties state, Block before, Block after) {
+        Map<PropertyName, PropertyValue> kept = new TreeMap<>();
+        state.values().forEach((name, value) -> {
+            if (before.properties().containsKey(name) && after.properties().containsKey(name)) {
+                kept.put(name, value);
+            }
+        });
+        return new StateProperties(kept);
     }
 
     private void diffValues(

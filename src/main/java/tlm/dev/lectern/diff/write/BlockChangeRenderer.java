@@ -38,12 +38,14 @@ public final class BlockChangeRenderer {
                     .put("type", "block.property_added")
                     .put("block", added.block().value())
                     .put("property", added.property().value())
+                    .put("default", added.defaultValue().value())
                     .put("values", values(added.values()))
                     .build();
             case BlockPropertyRemoved removed -> JsonObject.builder()
                     .put("type", "block.property_removed")
                     .put("block", removed.block().value())
                     .put("property", removed.property().value())
+                    .put("default", removed.defaultValue().value())
                     .put("values", values(removed.values()))
                     .build();
             case BlockPropertyValuesAdded added -> JsonObject.builder()

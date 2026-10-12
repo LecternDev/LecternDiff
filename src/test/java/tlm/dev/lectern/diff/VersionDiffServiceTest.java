@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.blockKey;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.property;
-import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
+import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.entry;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
@@ -21,7 +21,6 @@ import tlm.dev.lectern.diff.json.JsonReader;
 import tlm.dev.lectern.diff.model.ChangeSet;
 import tlm.dev.lectern.diff.blocks.BlockDiffer;
 import tlm.dev.lectern.diff.model.BlockAdded;
-import tlm.dev.lectern.diff.model.BlockDefaultStateModified;
 import tlm.dev.lectern.diff.model.BlockPropertyAdded;
 import tlm.dev.lectern.diff.model.BlockStateIdsShifted;
 import tlm.dev.lectern.diff.model.RegistryAdded;
@@ -63,8 +62,7 @@ class VersionDiffServiceTest {
                         new RegistryAdded(key("demo:widget"), id(1), 1),
                         new BlockStateIdsShifted(3, 2, stateId(0)),
                         new BlockAdded(blockKey("demo:anvil"), 1),
-                        new BlockPropertyAdded(blockKey("demo:lamp"), property("dim"), values("low", "high")),
-                        new BlockDefaultStateModified(blockKey("demo:lamp"), state("lit=false"), state("dim=low,lit=false"))),
+                        new BlockPropertyAdded(blockKey("demo:lamp"), property("dim"), values("low", "high"), value("low"))),
                 changeSet.changes());
     }
 
@@ -96,6 +94,6 @@ class VersionDiffServiceTest {
                 tree("1.0", GadgetScenario.BEFORE, GadgetScenario.BLOCKS_BEFORE),
                 tree("1.1", GadgetScenario.AFTER, GadgetScenario.BLOCKS_AFTER));
         List<Boolean> registryFlags = changeSet.changes().stream().map(change -> change instanceof RegistryChange).toList();
-        assertEquals(List.of(true, true, true, true, false, false, false, false), registryFlags);
+        assertEquals(List.of(true, true, true, true, false, false, false), registryFlags);
     }
 }

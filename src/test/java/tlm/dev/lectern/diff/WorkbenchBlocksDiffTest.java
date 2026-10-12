@@ -139,7 +139,7 @@ class WorkbenchBlocksDiffTest {
         assertEquals(Map.ofEntries(
                 Map.entry("BlockAdded", 384L), Map.entry("BlockRemoved", 2L), Map.entry("BlockPropertyAdded", 26L),
                 Map.entry("BlockPropertyRemoved", 2L), Map.entry("BlockPropertyValuesAdded", 57L),
-                Map.entry("BlockPropertyValuesRemoved", 56L), Map.entry("BlockDefaultStateModified", 42L),
+                Map.entry("BlockPropertyValuesRemoved", 56L), Map.entry("BlockDefaultStateModified", 15L),
                 Map.entry("BlockStateIdsModified", 46L), Map.entry("BlockStateIdsShifted", 1L)), countsByType(changeSet));
         assertEquals(List.of(new BlockStateIdsShifted(9323, 569, stateId(20))), ofType(changeSet, BlockStateIdsShifted.class));
         assertEquals(751, ofType(changeSet, BlockStateIdsModified.class).stream().mapToInt(BlockStateIdsModified::stateCount).sum());
@@ -150,7 +150,7 @@ class WorkbenchBlocksDiffTest {
         ChangeSet before = diff("1.20.4", "1.21.11");
         assertEquals(Map.ofEntries(
                 Map.entry("BlockAdded", 109L), Map.entry("BlockRemoved", 1L), Map.entry("BlockPropertyAdded", 1L),
-                Map.entry("BlockDefaultStateModified", 1L), Map.entry("BlockStateIdsShifted", 1L)), countsByType(before));
+                Map.entry("BlockStateIdsShifted", 1L)), countsByType(before));
         assertEquals(List.of(new BlockStateIdsShifted(26610, 1036, stateId(22))), ofType(before, BlockStateIdsShifted.class));
         ChangeSet after = diff("1.21.11", RELEASE);
         assertEquals(Map.ofEntries(
