@@ -27,6 +27,7 @@ import tlm.dev.lectern.diff.model.BlockChange;
 import tlm.dev.lectern.diff.model.BlockPropertyAdded;
 import tlm.dev.lectern.diff.model.BlockStateIdsShifted;
 import tlm.dev.lectern.diff.model.ChangeDomain;
+import tlm.dev.lectern.diff.model.CommandChange;
 import tlm.dev.lectern.diff.model.ChangeSet;
 import tlm.dev.lectern.diff.model.PacketAdded;
 import tlm.dev.lectern.diff.model.PacketChange;
@@ -118,6 +119,7 @@ class VersionDiffServiceTest {
                     case RegistryChange _ -> "registries";
                     case BlockChange _ -> "blocks";
                     case PacketChange _ -> "packets";
+                    case CommandChange _ -> "commands";
                 })
                 .distinct()
                 .toList();

@@ -7,6 +7,7 @@ import tlm.dev.lectern.diff.json.JsonObject;
 import tlm.dev.lectern.diff.json.JsonValue;
 import tlm.dev.lectern.diff.model.BlockChange;
 import tlm.dev.lectern.diff.model.Change;
+import tlm.dev.lectern.diff.model.CommandChange;
 import tlm.dev.lectern.diff.model.ChangeSet;
 import tlm.dev.lectern.diff.model.PacketChange;
 import tlm.dev.lectern.diff.model.RegistryChange;
@@ -40,6 +41,7 @@ public final class ChangeSetWriter {
             case RegistryChange registryChange -> renderers.registries().render(registryChange);
             case BlockChange blockChange -> renderers.blocks().render(blockChange);
             case PacketChange packetChange -> renderers.packets().render(packetChange);
+            case CommandChange commandChange -> renderers.commands().render(commandChange);
         };
     }
 

@@ -8,6 +8,11 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.name;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.number;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.path;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.properties;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.requires;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.direction;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.packet;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.phase;
@@ -19,6 +24,7 @@ import static tlm.dev.lectern.diff.fixtures.VersionFixtures.release;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
@@ -58,7 +64,18 @@ class ChangeSetTest {
             new PacketRemoved(phase("play"), direction("clientbound"), packet("demo:b"), id(2)),
             new PacketIdModified(phase("play"), direction("clientbound"), packet("demo:c"), id(3), id(4)),
             new PacketIdsShifted(phase("play"), direction("clientbound"), 12, id(4)),
-            new PacketIdsShifted(phase("play"), direction("serverbound"), 2, id(1)));
+            new PacketIdsShifted(phase("play"), direction("serverbound"), 2, id(1)),
+            new CommandAdded(name("alpha"), NodeKind.LITERAL, 2),
+            new CommandRemoved(name("alpha"), NodeKind.LITERAL, 2),
+            new CommandNodeAdded(path("alpha", "x"), NodeKind.LITERAL, 1),
+            new CommandNodeRemoved(path("alpha", "x"), NodeKind.LITERAL, 1),
+            new CommandParserModified(path("alpha", "x"), new ParserId("minecraft:a"), new ParserId("minecraft:b")),
+            new CommandPropertiesModified(path("alpha", "x"), Optional.empty(), Optional.of(properties(Map.of("min", number("0"))))),
+            new CommandExecutableModified(path("alpha", "x"), false, true),
+            new CommandPermissionsModified(path("alpha", "x"), Optional.empty(), Optional.of(requires("admins"))),
+            new CommandRedirectModified(path("alpha", "x"), Optional.empty(), Optional.of(path("alpha"))),
+            new CommandExecutableModified(path("alpha", "y"), true, false),
+            new CommandAdded(name("beta"), NodeKind.LITERAL, 1));
 
     @Test
     void changesAreSortedByDomainThenSubjectThenTypeThenDetail() {

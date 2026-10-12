@@ -6,6 +6,11 @@ import static tlm.dev.lectern.diff.fixtures.BlockFixtures.state;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.stateId;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.value;
 import static tlm.dev.lectern.diff.fixtures.BlockFixtures.values;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.name;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.number;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.path;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.properties;
+import static tlm.dev.lectern.diff.fixtures.CommandFixtures.requires;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.direction;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.packet;
 import static tlm.dev.lectern.diff.fixtures.PacketFixtures.phase;
@@ -14,6 +19,7 @@ import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.id;
 import static tlm.dev.lectern.diff.fixtures.RegistryFixtures.key;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import tlm.dev.lectern.diff.model.BlockAdded;
 import tlm.dev.lectern.diff.model.BlockDefaultStateModified;
@@ -25,6 +31,16 @@ import tlm.dev.lectern.diff.model.BlockRemoved;
 import tlm.dev.lectern.diff.model.BlockStateIdsModified;
 import tlm.dev.lectern.diff.model.BlockStateIdsShifted;
 import tlm.dev.lectern.diff.model.Change;
+import tlm.dev.lectern.diff.model.CommandAdded;
+import tlm.dev.lectern.diff.model.CommandExecutableModified;
+import tlm.dev.lectern.diff.model.CommandNodeAdded;
+import tlm.dev.lectern.diff.model.CommandNodeRemoved;
+import tlm.dev.lectern.diff.model.CommandParserModified;
+import tlm.dev.lectern.diff.model.CommandPermissionsModified;
+import tlm.dev.lectern.diff.model.CommandPropertiesModified;
+import tlm.dev.lectern.diff.model.CommandRedirectModified;
+import tlm.dev.lectern.diff.model.CommandRemoved;
+import tlm.dev.lectern.diff.model.NodeKind;
 import tlm.dev.lectern.diff.model.PacketAdded;
 import tlm.dev.lectern.diff.model.PacketDirectionAdded;
 import tlm.dev.lectern.diff.model.PacketDirectionRemoved;
@@ -33,6 +49,7 @@ import tlm.dev.lectern.diff.model.PacketIdsShifted;
 import tlm.dev.lectern.diff.model.PacketPhaseAdded;
 import tlm.dev.lectern.diff.model.PacketPhaseRemoved;
 import tlm.dev.lectern.diff.model.PacketRemoved;
+import tlm.dev.lectern.diff.model.ParserId;
 import tlm.dev.lectern.diff.model.RegistryAdded;
 import tlm.dev.lectern.diff.model.RegistryDefaultModified;
 import tlm.dev.lectern.diff.model.RegistryEntryAdded;
@@ -75,6 +92,17 @@ public final class ChangeFixtures {
                 new PacketAdded(phase("play"), direction("clientbound"), packet("demo:ping"), id(7)),
                 new PacketRemoved(phase("play"), direction("clientbound"), packet("demo:pong"), id(9)),
                 new PacketIdModified(phase("play"), direction("serverbound"), packet("demo:chat"), id(3), id(5)),
-                new PacketIdsShifted(phase("play"), direction("clientbound"), 12, id(4)));
+                new PacketIdsShifted(phase("play"), direction("clientbound"), 12, id(4)),
+                new CommandAdded(name("dialog"), NodeKind.LITERAL, 6),
+                new CommandRemoved(name("legacy"), NodeKind.LITERAL, 2),
+                new CommandNodeAdded(path("fetch", "profile"), NodeKind.ARGUMENT, 4),
+                new CommandNodeRemoved(path("fetch", "old"), NodeKind.LITERAL, 1),
+                new CommandParserModified(path("effect", "give", "effect"), new ParserId("minecraft:mob_effect"),
+                        new ParserId("minecraft:resource")),
+                new CommandPropertiesModified(path("test", "run", "rotationSteps"), Optional.empty(),
+                        Optional.of(properties(Map.of("min", number("0"), "max", number("3"))))),
+                new CommandExecutableModified(path("kill"), false, true),
+                new CommandPermissionsModified(path("op"), Optional.empty(), Optional.of(requires("admins"))),
+                new CommandRedirectModified(path("execute", "run"), Optional.of(path("execute")), Optional.empty()));
     }
 }

@@ -202,6 +202,92 @@ class ChangeSetWriterTest {
                   "packet_count": 4,
                   "phase": "status",
                   "type": "packet.phase_removed"
+                },
+                {
+                  "command": "dialog",
+                  "kind": "literal",
+                  "node_count": 6,
+                  "type": "command.added"
+                },
+                {
+                  "new_parser": "minecraft:resource",
+                  "old_parser": "minecraft:mob_effect",
+                  "path": [
+                    "effect",
+                    "give",
+                    "effect"
+                  ],
+                  "type": "command.parser_modified"
+                },
+                {
+                  "new_redirect": null,
+                  "old_redirect": [
+                    "execute"
+                  ],
+                  "path": [
+                    "execute",
+                    "run"
+                  ],
+                  "type": "command.redirect_modified"
+                },
+                {
+                  "kind": "literal",
+                  "node_count": 1,
+                  "path": [
+                    "fetch",
+                    "old"
+                  ],
+                  "type": "command.node_removed"
+                },
+                {
+                  "kind": "argument",
+                  "node_count": 4,
+                  "path": [
+                    "fetch",
+                    "profile"
+                  ],
+                  "type": "command.node_added"
+                },
+                {
+                  "new_executable": true,
+                  "old_executable": false,
+                  "path": [
+                    "kill"
+                  ],
+                  "type": "command.executable_modified"
+                },
+                {
+                  "command": "legacy",
+                  "kind": "literal",
+                  "node_count": 2,
+                  "type": "command.removed"
+                },
+                {
+                  "new_permissions": {
+                    "permission": {
+                      "level": "admins",
+                      "type": "minecraft:command_level"
+                    },
+                    "type": "minecraft:require"
+                  },
+                  "old_permissions": null,
+                  "path": [
+                    "op"
+                  ],
+                  "type": "command.permissions_modified"
+                },
+                {
+                  "new_properties": {
+                    "max": 3,
+                    "min": 0
+                  },
+                  "old_properties": null,
+                  "path": [
+                    "test",
+                    "run",
+                    "rotationSteps"
+                  ],
+                  "type": "command.properties_modified"
                 }
               ],
               "from": {
@@ -218,7 +304,8 @@ class ChangeSetWriterTest {
             """;
 
     private final ChangeSetWriter writer = new ChangeSetWriter(
-                new ChangeRenderers(new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer()),
+                new ChangeRenderers(new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer(),
+                        new CommandChangeRenderer()),
                 new CanonicalJsonWriter());
 
     private static ChangeSet oneOfEachTypeBetweenTwoVersions() {

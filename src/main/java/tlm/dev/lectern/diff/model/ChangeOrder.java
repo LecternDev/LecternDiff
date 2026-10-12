@@ -1,6 +1,7 @@
 package tlm.dev.lectern.diff.model;
 
 import java.util.Comparator;
+import java.util.stream.Collectors;
 
 final class ChangeOrder {
 
@@ -13,7 +14,9 @@ final class ChangeOrder {
     private static final int REGISTRIES = ChangeDomain.REGISTRIES.rank();
     private static final int BLOCKS = ChangeDomain.BLOCKS.rank();
     private static final int PACKETS = ChangeDomain.PACKETS.rank();
+    private static final int COMMANDS = ChangeDomain.COMMANDS.rank();
     private static final String SEPARATOR = "/";
+    private static final String PATH_SEPARATOR = String.valueOf((char) 0);
 
     private record Key(int group, String subject, int rank, String detail) {
     }
@@ -54,7 +57,20 @@ final class ChangeOrder {
             case PacketIdModified modified ->
                     new Key(PACKETS, modified.phase().value(), 7, packetDetail(modified.direction(), modified.packet()));
             case PacketIdsShifted shifted -> new Key(PACKETS, shifted.phase().value(), 8, shifted.direction().label());
+            case CommandAdded added -> new Key(COMMANDS, added.command().value(), 1, "");
+            case CommandRemoved removed -> new Key(COMMANDS, removed.command().value(), 2, "");
+            case CommandNodeAdded added -> new Key(COMMANDS, pathSubject(added.path()), 3, "");
+            case CommandNodeRemoved removed -> new Key(COMMANDS, pathSubject(removed.path()), 4, "");
+            case CommandParserModified modified -> new Key(COMMANDS, pathSubject(modified.path()), 5, "");
+            case CommandPropertiesModified modified -> new Key(COMMANDS, pathSubject(modified.path()), 6, "");
+            case CommandExecutableModified modified -> new Key(COMMANDS, pathSubject(modified.path()), 7, "");
+            case CommandPermissionsModified modified -> new Key(COMMANDS, pathSubject(modified.path()), 8, "");
+            case CommandRedirectModified modified -> new Key(COMMANDS, pathSubject(modified.path()), 9, "");
         };
+    }
+
+    private static String pathSubject(CommandPath path) {
+        return path.names().stream().map(CommandNodeName::value).collect(Collectors.joining(PATH_SEPARATOR));
     }
 
     private static String packetDetail(PacketDirection direction, PacketName packet) {

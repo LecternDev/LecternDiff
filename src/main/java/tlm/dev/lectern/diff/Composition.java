@@ -13,6 +13,7 @@ import tlm.dev.lectern.diff.read.RegistryReportReader;
 import tlm.dev.lectern.diff.registries.RegistryDiffer;
 import tlm.dev.lectern.diff.write.BlockChangeRenderer;
 import tlm.dev.lectern.diff.write.ChangeRenderers;
+import tlm.dev.lectern.diff.write.CommandChangeRenderer;
 import tlm.dev.lectern.diff.write.ChangeSetWriter;
 import tlm.dev.lectern.diff.write.PacketChangeRenderer;
 import tlm.dev.lectern.diff.write.RegistryChangeRenderer;
@@ -39,7 +40,9 @@ final class Composition {
 
     static ChangeSetWriter changeSetWriter() {
         return new ChangeSetWriter(
-                new ChangeRenderers(new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer()),
+                new ChangeRenderers(
+                        new RegistryChangeRenderer(), new BlockChangeRenderer(), new PacketChangeRenderer(),
+                        new CommandChangeRenderer()),
                 new CanonicalJsonWriter());
     }
 }
