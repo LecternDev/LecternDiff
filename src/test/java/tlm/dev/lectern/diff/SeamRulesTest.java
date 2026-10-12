@@ -10,21 +10,24 @@ import org.junit.jupiter.api.Test;
 class SeamRulesTest {
 
     private static final List<String> FAMILIES = List.of(
-            "model", "json", "ids", "read", "write", "registries", "blocks", "commands", "packets", "recipes", "loottables",
-            "worldgen");
+            "model", "json", "jsondiff", "ids", "read", "write", "registries", "blocks", "commands", "packets", "recipes",
+            "loottables", "tags", "datafolders", "worldgen");
 
     private static final Map<String, Set<String>> ALLOWED = Map.ofEntries(
-            Map.entry("model", Set.of()),
+            Map.entry("model", Set.of("json", "jsondiff")),
             Map.entry("json", Set.of()),
+            Map.entry("jsondiff", Set.of("json")),
             Map.entry("ids", Set.of()),
             Map.entry("read", Set.of("model", "json")),
-            Map.entry("write", Set.of("model", "json")),
+            Map.entry("write", Set.of("model", "json", "jsondiff")),
             Map.entry("registries", Set.of("model", "ids")),
             Map.entry("blocks", Set.of("model", "ids")),
             Map.entry("commands", Set.of("model", "ids")),
             Map.entry("packets", Set.of("model", "ids")),
-            Map.entry("recipes", Set.of("model", "ids")),
-            Map.entry("loottables", Set.of("model", "ids")),
+            Map.entry("recipes", Set.of("model", "jsondiff")),
+            Map.entry("loottables", Set.of("model", "jsondiff")),
+            Map.entry("tags", Set.of("model")),
+            Map.entry("datafolders", Set.of("model", "json")),
             Map.entry("worldgen", Set.of("model", "ids")));
 
     private static String importing(String... imports) {

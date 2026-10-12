@@ -16,8 +16,8 @@ final class SeamRules {
     private static final List<String> JDK_PREFIXES = List.of("java.", "javax.");
     private static final List<String> QUALIFIED_PREFIXES = List.of(ROOT, "tools.jackson.");
     private static final Set<String> DOMAINS =
-            Set.of("registries", "blocks", "commands", "packets", "recipes", "loottables", "worldgen");
-    private static final Set<String> FAMILIES = familiesWith(DOMAINS, "model", "json", "ids", "read", "write");
+            Set.of("registries", "blocks", "commands", "packets", "recipes", "loottables", "tags", "datafolders", "worldgen");
+    private static final Set<String> FAMILIES = familiesWith(DOMAINS, "model", "json", "jsondiff", "ids", "read", "write");
     private static final Map<String, String> THIRD_PARTY_OWNERS = Map.of("tools.jackson.core", "json");
 
     private SeamRules() {
@@ -45,8 +45,14 @@ final class SeamRules {
 
     private static Set<String> allowedImports(String family) {
         return switch (family) {
-            case "model", "json", "ids" -> Set.of();
-            case "read", "write" -> Set.of("model", "json");
+            case "json", "ids" -> Set.of();
+            case "jsondiff" -> Set.of("json");
+            case "model" -> Set.of("json", "jsondiff");
+            case "read" -> Set.of("model", "json");
+            case "write" -> Set.of("model", "json", "jsondiff");
+            case "recipes", "loottables" -> Set.of("model", "jsondiff");
+            case "tags" -> Set.of("model");
+            case "datafolders" -> Set.of("model", "json");
             default -> Set.of("model", "ids");
         };
     }
