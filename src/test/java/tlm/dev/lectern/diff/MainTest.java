@@ -194,6 +194,21 @@ class MainTest {
                       "domain": "commands",
                       "reason": "report_missing",
                       "side": "to"
+                    },
+                    {
+                      "domain": "recipes",
+                      "reason": "report_missing",
+                      "side": "to"
+                    },
+                    {
+                      "domain": "loot_tables",
+                      "reason": "report_missing",
+                      "side": "to"
+                    },
+                    {
+                      "domain": "tags",
+                      "reason": "report_missing",
+                      "side": "to"
                     }
                   ],
                 """), outcome.out());
@@ -210,6 +225,7 @@ class MainTest {
         assertTrue(outcome.out().contains("\"domain\": \"blocks\""), outcome.out());
         assertTrue(outcome.out().contains("\"domain\": \"packets\""), outcome.out());
         assertTrue(outcome.out().contains("\"domain\": \"commands\""), outcome.out());
+        assertTrue(outcome.out().contains("\"domain\": \"recipes\""), outcome.out());
         assertTrue(outcome.out().contains("\"side\": \"to\""), outcome.out());
         assertTrue(outcome.out().contains("\"type\": \"registry.added\""), outcome.out());
         assertTrue(!outcome.out().contains("\"type\": \"block."), outcome.out());

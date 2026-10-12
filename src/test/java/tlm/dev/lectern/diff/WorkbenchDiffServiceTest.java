@@ -22,7 +22,9 @@ import tlm.dev.lectern.diff.model.RegistryChange;
 import tlm.dev.lectern.diff.model.TagChange;
 import tlm.dev.lectern.diff.model.SkipReason;
 import tlm.dev.lectern.diff.model.SkipSide;
+import tlm.dev.lectern.diff.model.Skipped;
 import tlm.dev.lectern.diff.model.SkippedDomain;
+import tlm.dev.lectern.diff.model.SkippedFolder;
 import tlm.dev.lectern.diff.read.BlockReportReader;
 import tlm.dev.lectern.diff.read.CommandReportReader;
 import tlm.dev.lectern.diff.read.PacketReportReader;
@@ -60,13 +62,25 @@ class WorkbenchDiffServiceTest {
         return new SkippedDomain(domain, side, new SkipReason.ReportMissing());
     }
 
+    private static List<Skipped> domainSkips(ChangeSet changeSet) {
+        return changeSet.skipped().stream().filter(SkippedDomain.class::isInstance).toList();
+    }
+
+    private static List<SkippedFolder> folderSkips(ChangeSet changeSet) {
+        return changeSet.skipped().stream().filter(SkippedFolder.class::isInstance).map(SkippedFolder.class::cast).toList();
+    }
+
     @Test
-    void releaseToSnapshotChangesRegistriesBlocksAndCommandsAndSkipsNothing() {
+    void releaseToSnapshotChangesSixDomainsAndDeclaresTheSixFoldersItDoesNotCompare() {
         requireReport(PacketReportReader.FILE, "26.3", "26.4-snapshot-3");
         ChangeSet changeSet = diff("26.3", "26.4-snapshot-3");
-        assertEquals(List.of(), changeSet.skipped());
-        assertEquals(Map.of("registries", 55L, "blocks", 3L, "commands", 3L), countsByDomain(changeSet));
-        assertEquals(61, changeSet.changes().size());
+        assertEquals(List.of(), domainSkips(changeSet));
+        assertEquals(List.of("advancement", "block_sound_set", "datapacks", "dimension_type", "villager_trade", "worldgen"),
+                folderSkips(changeSet).stream().map(SkippedFolder::folder).toList());
+        assertEquals(6, changeSet.skipped().size());
+        assertEquals(Map.of("registries", 55L, "blocks", 3L, "commands", 3L, "recipes", 13L, "loot_tables", 3L, "tags", 36L),
+                countsByDomain(changeSet));
+        assertEquals(113, changeSet.changes().size());
     }
 
     @Test
@@ -80,7 +94,7 @@ class WorkbenchDiffServiceTest {
     @Test
     void oneTwentyFourToOneTwentyOneElevenSkipsThePacketsOnTheSideThatLacksThem() {
         ChangeSet changeSet = diff("1.20.4", "1.21.11");
-        assertEquals(List.of(skipped(ChangeDomain.PACKETS, SkipSide.FROM)), changeSet.skipped());
+        assertEquals(List.of(skipped(ChangeDomain.PACKETS, SkipSide.FROM)), domainSkips(changeSet));
         assertTrue(changeSet.changes().stream().noneMatch(change -> change instanceof PacketChange));
         Map<String, Long> counts = countsByDomain(changeSet);
         assertEquals(1365L, counts.get("registries"));
@@ -91,7 +105,7 @@ class WorkbenchDiffServiceTest {
     @Test
     void oneFourteenFourToOneTwentyFourSkipsThePacketsOnBothSides() {
         ChangeSet changeSet = diff("1.14.4", "1.20.4");
-        assertEquals(List.of(skipped(ChangeDomain.PACKETS, SkipSide.BOTH)), changeSet.skipped());
+        assertEquals(List.of(skipped(ChangeDomain.PACKETS, SkipSide.BOTH)), domainSkips(changeSet));
         Map<String, Long> counts = countsByDomain(changeSet);
         assertEquals(3536L, counts.get("registries"));
         assertEquals(154L, counts.get("commands"));
@@ -100,14 +114,14 @@ class WorkbenchDiffServiceTest {
     }
 
     @Test
-    void oneTwentyOneElevenToTheNewNamingChangesTheFourDomainsInTheOrderOfTheSchema() {
+    void oneTwentyOneElevenToTheNewNamingChangesEverySupportedDomainInTheOrderOfTheSchema() {
         requireReport(PacketReportReader.FILE, "1.21.11", "26.3");
         ChangeSet changeSet = diff("1.21.11", "26.3");
-        assertEquals(List.of(), changeSet.skipped());
+        assertEquals(List.of(), domainSkips(changeSet));
         Map<String, Long> counts = countsByDomain(changeSet);
         assertEquals(14L, counts.get("packets"));
         assertEquals(116L, counts.get("commands"));
-        assertEquals(List.of("registries", "blocks", "packets", "commands"),
+        assertEquals(List.of("registries", "blocks", "packets", "commands", "recipes", "loot_tables", "tags"),
                 changeSet.changes().stream().map(WorkbenchDiffServiceTest::domainOf).distinct().toList());
     }
 }

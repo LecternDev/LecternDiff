@@ -46,6 +46,11 @@ tasks.test {
     inputs.files(fileTree("../LecternWorkbench/normalized") { include("*/reports/registries.json", "*/reports/blocks.json", "*/reports/packets.json", "*/reports/commands.json") })
         .withPropertyName("workbenchNormalizedReports")
         .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property("workbenchVersions", providers.provider {
+        listOf("generated", "normalized").flatMap { kind ->
+            file("../LecternWorkbench/$kind").listFiles { entry -> entry.isDirectory }?.map { "$kind/${it.name}" } ?: emptyList()
+        }.sorted()
+    })
     testLogging {
         events("failed", "skipped")
         exceptionFormat = TestExceptionFormat.FULL

@@ -1,5 +1,8 @@
 package tlm.dev.lectern.diff.fixtures;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public final class GadgetScenario {
 
     public static final String BEFORE = """
@@ -172,6 +175,80 @@ public final class GadgetScenario {
             }
             """;
 
+    public static final Map<String, String> DATA_BEFORE = Map.ofEntries(
+            Map.entry("data/demo/recipes/acorn_bread.json",
+                    "{\"type\": \"demo:crafting_shaped\", \"pattern\": [\"##\"], \"result\": {\"item\": \"demo:acorn_bread\", \"count\": 1}}"),
+            Map.entry("data/demo/recipes/old_stew.json",
+                    "{\"type\": \"demo:smelting\", \"ingredient\": \"demo:mud\", \"result\": \"demo:stew\"}"),
+            Map.entry("data/demo/recipes/gadget.json",
+                    "{\"type\": \"demo:crafting_shapeless\", \"ingredients\": [\"demo:a\", \"demo:b\"], \"result\": {\"item\": \"demo:gadget\", \"count\": 1}}"),
+            Map.entry("data/demo/loot_tables/blocks/crate.json",
+                    "{\"type\": \"demo:block\", \"pools\": [{\"rolls\": 1, \"entries\": [{\"type\": \"demo:item\", \"name\": \"demo:plank\"}]}]}"),
+            Map.entry("data/demo/loot_tables/blocks/vase.json",
+                    "{\"pools\": []}"),
+            Map.entry("data/demo/tags/blocks/logs.json",
+                    "{\"replace\": false, \"values\": [\"demo:oak_log\", \"demo:birch_log\", \"#demo:stems\"]}"),
+            Map.entry("data/demo/tags/items/old_tools.json",
+                    "{\"replace\": false, \"values\": [\"demo:axe\", \"demo:pick\"]}"),
+            Map.entry("data/demo/tags/worldgen/biome/is_cold.json",
+                    "{\"values\": [\"demo:tundra\"]}"),
+            Map.entry("data/demo/worldgen/biome/plains.json",
+                    "{\"temperature\": 0.8}"),
+            Map.entry("data/demo/worldgen/biome/swamp.json",
+                    "{\"temperature\": 0.7}"),
+            Map.entry("data/demo/advancements/root.json",
+                    "{\"display\": {}}"),
+            Map.entry("data/demo/datapacks/pack/pack.mcmeta",
+                    "{\"pack\": {\"pack_format\": 1}}"));
+
+    public static final Map<String, String> DATA_AFTER = Map.ofEntries(
+            Map.entry("data/demo/recipe/acorn_bread.json",
+                    "{\"result\": {\"count\": 1, \"item\": \"demo:acorn_bread\"}, \"pattern\": [\"##\"], \"type\": \"demo:crafting_shaped\"}"),
+            Map.entry("data/demo/recipe/gadget.json",
+                    "{\"type\": \"demo:crafting_shapeless\", \"ingredients\": [\"demo:a\", \"demo:c\"], \"result\": {\"item\": \"demo:gadget\", \"count\": 2}}"),
+            Map.entry("data/demo/recipe/brewing/new_potion.json",
+                    "{\"type\": \"demo:brewing\", \"input\": {\"item\": \"demo:bottle\"}, \"output\": {\"id\": \"demo:potion\"}, \"reagent\": {\"item\": \"demo:dust\"}}"),
+            Map.entry("data/demo/loot_table/blocks/crate.json",
+                    "{\"type\": \"demo:block\", \"pools\": [{\"rolls\": 2, \"entries\": [{\"type\": \"demo:item\", \"name\": \"demo:plank\"}]}, {\"rolls\": 1, \"entries\": []}]}"),
+            Map.entry("data/demo/loot_table/chests/vault.json",
+                    "{\"type\": \"demo:chest\", \"pools\": []}"),
+            Map.entry("data/demo/tags/block/logs.json",
+                    "{\"values\": [\"#demo:stems\", \"demo:oak_log\", \"demo:cherry_log\"]}"),
+            Map.entry("data/demo/tags/block/mineable/spade.json",
+                    "{\"values\": [\"demo:dirt\", \"demo:sand\"]}"),
+            Map.entry("data/demo/tags/worldgen/biome/is_cold.json",
+                    "{\"values\": [\"demo:tundra\"]}"),
+            Map.entry("data/demo/worldgen/biome/plains.json",
+                    "{\"temperature\": 0.9}"),
+            Map.entry("data/demo/worldgen/biome/swamp.json",
+                    "{\"temperature\": 0.7}"),
+            Map.entry("data/demo/worldgen/biome/jungle.json",
+                    "{\"temperature\": 0.95}"),
+            Map.entry("data/demo/advancement/root.json",
+                    "{\"display\": {}}"),
+            Map.entry("data/demo/dialog/welcome.json",
+                    "{\"title\": \"hello\"}"),
+            Map.entry("data/demo/datapacks/pack/pack.mcmeta",
+                    "{\"pack\": {\"pack_format\": 2}}"));
+
+    public static Map<String, String> beforeFiles() {
+        Map<String, String> files = new LinkedHashMap<>(DATA_BEFORE);
+        files.put("reports/registries.json", BEFORE);
+        files.put("reports/blocks.json", BLOCKS_BEFORE);
+        files.put("reports/packets.json", PACKETS_BEFORE);
+        files.put("reports/commands.json", COMMANDS_BEFORE);
+        return files;
+    }
+
+    public static Map<String, String> afterFiles() {
+        Map<String, String> files = new LinkedHashMap<>(DATA_AFTER);
+        files.put("reports/registries.json", AFTER);
+        files.put("reports/blocks.json", BLOCKS_AFTER);
+        files.put("reports/packets.json", PACKETS_AFTER);
+        files.put("reports/commands.json", COMMANDS_AFTER);
+        return files;
+    }
+
     public static final String EXPECTED_JSON = """
             {
               "changes": [
@@ -318,6 +395,94 @@ public final class GadgetScenario {
                   "kind": "literal",
                   "node_count": 2,
                   "type": "command.removed"
+                },
+                {
+                  "recipe": "demo:brewing/new_potion",
+                  "recipe_type": "demo:brewing",
+                  "result": "demo:potion",
+                  "type": "recipe.added"
+                },
+                {
+                  "places": [
+                    {
+                      "new_value": "demo:c",
+                      "old_value": "demo:b",
+                      "operation": "modified",
+                      "pointer": "/ingredients/1"
+                    },
+                    {
+                      "new_value": 2,
+                      "old_value": 1,
+                      "operation": "modified",
+                      "pointer": "/result/count"
+                    }
+                  ],
+                  "recipe": "demo:gadget",
+                  "type": "recipe.modified"
+                },
+                {
+                  "recipe": "demo:old_stew",
+                  "recipe_type": "demo:smelting",
+                  "result": "demo:stew",
+                  "type": "recipe.removed"
+                },
+                {
+                  "loot_table": "demo:blocks/crate",
+                  "places": [
+                    {
+                      "new_value": 2,
+                      "old_value": 1,
+                      "operation": "modified",
+                      "pointer": "/pools/0/rolls"
+                    },
+                    {
+                      "new_value": {
+                        "entries": [],
+                        "rolls": 1
+                      },
+                      "operation": "added",
+                      "pointer": "/pools/1"
+                    }
+                  ],
+                  "type": "loot_table.modified"
+                },
+                {
+                  "loot_table": "demo:blocks/vase",
+                  "table_type": null,
+                  "type": "loot_table.removed"
+                },
+                {
+                  "loot_table": "demo:chests/vault",
+                  "table_type": "demo:chest",
+                  "type": "loot_table.added"
+                },
+                {
+                  "registry": "block",
+                  "tag": "demo:logs",
+                  "type": "tag.values_added",
+                  "values": [
+                    "demo:cherry_log"
+                  ]
+                },
+                {
+                  "registry": "block",
+                  "tag": "demo:logs",
+                  "type": "tag.values_removed",
+                  "values": [
+                    "demo:birch_log"
+                  ]
+                },
+                {
+                  "registry": "block",
+                  "tag": "demo:mineable/spade",
+                  "type": "tag.added",
+                  "value_count": 2
+                },
+                {
+                  "registry": "item",
+                  "tag": "demo:old_tools",
+                  "type": "tag.removed",
+                  "value_count": 2
                 }
               ],
               "from": {
@@ -325,7 +490,29 @@ public final class GadgetScenario {
                 "kind": "release"
               },
               "schema_version": 1,
-              "skipped": [],
+              "skipped": [
+                {
+                  "added": 0,
+                  "folder": "datapacks",
+                  "modified": 1,
+                  "reason": "not_compared",
+                  "removed": 0
+                },
+                {
+                  "added": 1,
+                  "folder": "dialog",
+                  "modified": 0,
+                  "reason": "not_compared",
+                  "removed": 0
+                },
+                {
+                  "added": 1,
+                  "folder": "worldgen",
+                  "modified": 1,
+                  "reason": "not_compared",
+                  "removed": 0
+                }
+              ],
               "to": {
                 "id": "1.1",
                 "kind": "release"

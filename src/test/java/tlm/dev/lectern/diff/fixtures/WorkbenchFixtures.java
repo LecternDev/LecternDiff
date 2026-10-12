@@ -36,6 +36,16 @@ public final class WorkbenchFixtures {
         }
     }
 
+    public static void requireData(String... versions) {
+        for (String version : versions) {
+            Path data = GENERATED.resolve(version).resolve("data");
+            assumeTrue(Files.isDirectory(data), "Workbench data missing: " + data.normalize()
+                    + ". Download the server jar of " + version + " (SHA-1 checked against the Mojang manifest), run the"
+                    + " official data generator with --server --reports into LecternWorkbench/generated/" + version
+                    + "/ as described in LecternPipeline/CLAUDE.md, section Constats.");
+        }
+    }
+
     public static Path generatedFolder(String version) {
         return GENERATED.resolve(version);
     }
