@@ -37,7 +37,7 @@ tasks.test {
     inputs.files(fileTree("src/main/java"), fileTree("src/test/java"))
         .withPropertyName("sourceRuleInputs")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.files(fileTree("../LecternWorkbench/generated") { include("*/reports/registries.json") })
+    inputs.files(fileTree("../LecternWorkbench/generated") { include("*/reports/registries.json", "*/reports/blocks.json") })
         .withPropertyName("workbenchReports")
         .withPathSensitivity(PathSensitivity.RELATIVE)
     testLogging {
