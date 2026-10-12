@@ -1,5 +1,6 @@
 package tlm.dev.lectern.diff.fixtures;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import tlm.dev.lectern.diff.model.VersionRef;
@@ -23,5 +24,10 @@ public final class InMemoryVersionTree implements VersionTree {
     @Override
     public Optional<String> readText(String relativePath) {
         return Optional.ofNullable(files.get(relativePath));
+    }
+
+    @Override
+    public List<String> files(String directory) {
+        return files.keySet().stream().filter(path -> path.startsWith(directory + "/")).sorted().toList();
     }
 }
